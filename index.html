@@ -1164,10 +1164,30 @@ async function ghPull() {
   try {
     const r = await ghReq('GET', 'thoughts.json');
     if (r.status === 404) { setSyncUI('ok'); return; }
-    if (!r.ok) throw new Error('fetch failed ' + r.status);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const j = await r.json();
     ghSHA = j.sha;
-    const parsed = JSON.parse(decodeB64(j.content));
+
+    let rawText;
+    // GitHub truncates files >1MB in the contents API — use download_url instead
+    if (j.encoding === 'none' || !j.content || j.content.trim() === '') {
+      if (!j.download_url) throw new Error('文件过大且无下载链接');
+      const dl = await fetch(j.download_url, {
+        headers: { 'Authorization': 'Bearer ' + cfg.token }
+      });
+      if (!dl.ok) throw new Error('下载失败 ' + dl.status);
+      rawText = await dl.text();
+    } else {
+      rawText = decodeB64(j.content);
+    }
+
+    if (!rawText || rawText.trim() === '') {
+      setSyncUI('fail');
+      toast('thoughts.json 文件内容为空，请检查仓库', 'err');
+      return;
+    }
+
+    const parsed = JSON.parse(rawText);
     entries = parsed.entries || [];
     saveLocal();
     setSyncUI('ok');
@@ -1181,7 +1201,8 @@ async function ghPush() {
   if (!cfg.token || !cfg.user || !cfg.repo) { saveLocal(); return; }
   setSyncUI('busy');
   try {
-    const content = encodeB64(JSON.stringify({ entries }, null, 2));
+    const payload = JSON.stringify({ entries }, null, 2);
+    const content = encodeB64(payload);
     const body = {
       message: 'update thoughts ' + new Date().toISOString().slice(0,16),
       content,
@@ -1189,8 +1210,14 @@ async function ghPush() {
     };
     const r = await ghReq('PUT', 'thoughts.json', body);
     if (!r.ok) {
-      const e = await r.json();
-      throw new Error(e.message || 'push failed');
+      const errJson = await r.json().catch(() => ({}));
+      // SHA conflict — re-pull then retry once
+      if (r.status === 409 || (errJson.message || '').includes('SHA')) {
+        toast('SHA 冲突，正在重新同步...', '');
+        await ghPull();
+        return ghPush();
+      }
+      throw new Error(errJson.message || 'HTTP ' + r.status);
     }
     const j = await r.json();
     ghSHA = j.content.sha;
@@ -1199,6 +1226,7 @@ async function ghPush() {
     toast('已同步到 GitHub', 'ok');
   } catch(e) {
     setSyncUI('fail');
+    saveLocal(); // always keep local copy safe
     toast('同步失败: ' + e.message, 'err');
   }
 }
@@ -1228,6 +1256,14 @@ async function saveEntry() {
   if (!selCat)    { toast('请选择分类', 'err'); return; }
   if (!content)   { toast('请输入内容', 'err'); return; }
 
+  const saveBtn = document.querySelector('#addOverlay .btn-primary');
+  let images;
+  try {
+    images = await uploadPendingImages(saveBtn);
+  } catch(e) {
+    return; // upload failed, error already toasted
+  }
+
   const now = new Date().toISOString();
   const base = editId ? entries.find(e => e.id === editId) : null;
 
@@ -1238,7 +1274,7 @@ async function saveEntry() {
     content,
     notes:     document.getElementById('fNotes').value.trim(),
     done:      document.getElementById('fDone').checked,
-    images:    pendingImgs.slice(),
+    images,
     url:       needsLink(selCat) ? document.getElementById('fUrl').value.trim() : '',
     linkTitle: needsLink(selCat) ? document.getElementById('fLinkTitle').value.trim() : '',
     createdAt: base ? base.createdAt : now,
@@ -1374,7 +1410,14 @@ function openAdd(entry = null) {
   document.getElementById('fDone').checked            = entry ? !!entry.done    : false;
   document.getElementById('fUrl').value               = entry ? (entry.url || '') : '';
   document.getElementById('fLinkTitle').value         = entry ? (entry.linkTitle || '') : '';
-  pendingImgs = entry ? (entry.images || []).slice() : [];
+  pendingImgs = entry
+    ? (entry.images || []).map(img => ({
+        path:    img.path || null,
+        name:    img.name || '',
+        preview: img.src  || null, // fallback for old base64 entries
+        file:    null,
+      }))
+    : [];
   renderImgPreview();
 
   document.querySelectorAll('.cat-pick').forEach(el => {
@@ -1437,9 +1480,10 @@ function openDetail(id) {
   const gallery = document.getElementById('detailGallery');
   const imgs = e.images || [];
   if (imgs.length) {
-    gallery.innerHTML = imgs.map(img =>
-      `<img class="detail-gallery-img" src="${img.src}" alt="${esc(img.name || '')}" onclick="openLightbox(this.src)" />`
-    ).join('');
+    gallery.innerHTML = imgs.map(img => {
+      const src = img.path ? imgRawURL(img.path) : (img.src || '');
+      return `<img class="detail-gallery-img" src="${src}" alt="${esc(img.name || '')}" onclick="openLightbox('${src}')" />`;
+    }).join('');
     gallery.style.display = '';
   } else {
     gallery.innerHTML = '';
@@ -1687,7 +1731,20 @@ function decodeB64(str) {
 
 /* ══════════════════════════════════════════════
    IMAGE HANDLING
+   Images are uploaded to repo as images/{ts}_{rand}.{ext}
+   Entry stores: [{path, name}]  (no base64 in JSON)
+   Fallback (no GitHub config): store as base64 locally
 ══════════════════════════════════════════════ */
+
+// pendingImgs items:
+//   uploaded:  { path, name, preview }        — already in repo
+//   pending:   { file, name, preview, path:null } — awaiting upload on save
+let pendingImgs = [];
+
+function imgRawURL(path) {
+  return `https://raw.githubusercontent.com/${cfg.user}/${cfg.repo}/main/${path}`;
+}
+
 function fileToDataURL(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
@@ -1697,29 +1754,61 @@ function fileToDataURL(file) {
   });
 }
 
+function fileToBase64(file) {
+  // Returns raw base64 (no data: prefix) for GitHub API
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('读取失败'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function ghUploadImage(file) {
+  const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+  const filename = `${Date.now()}_${Math.random().toString(36).slice(2,6)}.${ext}`;
+  const path = `images/${filename}`;
+  const base64 = await fileToBase64(file);
+  const r = await ghReq('PUT', path, {
+    message: `add image ${filename}`,
+    content: base64,
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.message || '图片上传失败');
+  }
+  return path;
+}
+
 async function addImgFiles(files) {
   for (const f of files) {
     if (!f.type.startsWith('image/')) continue;
     const isHeic = f.type === 'image/heic' || f.type === 'image/heif'
       || f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif');
     if (isHeic) {
-      toast('不支持 HEIC 格式，请在相册中先转换为 JPG（分享 → 存储为文件 → JPG）', 'err');
+      toast('不支持 HEIC，请先转为 JPG（相册 → 分享 → 存储为文件 → JPG）', 'err');
       continue;
     }
-    if (f.size > 5 * 1024 * 1024) { toast('图片超过 5MB，已跳过', 'err'); continue; }
-    const src = await fileToDataURL(f);
-    pendingImgs.push({ src, name: f.name });
+    if (f.size > 10 * 1024 * 1024) { toast('图片超过 10MB，已跳过', 'err'); continue; }
+    const preview = await fileToDataURL(f);
+    pendingImgs.push({ file: f, name: f.name, preview, path: null });
   }
   renderImgPreview();
 }
 
 function renderImgPreview() {
   const strip = document.getElementById('imgPreviewStrip');
-  strip.innerHTML = pendingImgs.map((img, i) => `
-    <div class="img-thumb-wrap">
-      <img class="img-thumb" src="${img.src}" alt="${esc(img.name)}" />
+  strip.innerHTML = pendingImgs.map((img, i) => {
+    const src = img.preview || (img.path && cfg.user ? imgRawURL(img.path) : '');
+    const badge = img.path
+      ? `<span style="position:absolute;bottom:3px;left:3px;background:rgba(58,138,74,.85);color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;font-family:var(--f-mono)">✓</span>`
+      : `<span style="position:absolute;bottom:3px;left:3px;background:rgba(200,149,58,.85);color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;font-family:var(--f-mono)">待传</span>`;
+    return `<div class="img-thumb-wrap">
+      <img class="img-thumb" src="${src}" alt="${esc(img.name)}" />
+      ${badge}
       <button class="img-thumb-del" onclick="removeImg(${i})" title="删除">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function removeImg(i) {
@@ -1739,18 +1828,50 @@ function imgDrop(e) {
   addImgFiles(Array.from(e.dataTransfer.files));
 }
 
-// paste anywhere in the add modal
 document.addEventListener('paste', e => {
   const overlay = document.getElementById('addOverlay');
   if (!overlay.classList.contains('open')) return;
   const items = Array.from(e.clipboardData?.items || []);
   const imgItems = items.filter(it => it.type.startsWith('image/'));
   if (!imgItems.length) return;
-  imgItems.forEach(it => {
-    const f = it.getAsFile();
-    if (f) addImgFiles([f]);
-  });
+  imgItems.forEach(it => { const f = it.getAsFile(); if (f) addImgFiles([f]); });
 });
+
+// Upload all pending (not-yet-uploaded) images, return [{path,name}] for all
+async function uploadPendingImages(saveBtn) {
+  const results = [];
+  const toUpload = pendingImgs.filter(img => !img.path);
+
+  if (toUpload.length && cfg.token && cfg.user && cfg.repo) {
+    if (saveBtn) { saveBtn.textContent = '上传图片中...'; saveBtn.disabled = true; }
+    for (let i = 0; i < pendingImgs.length; i++) {
+      const img = pendingImgs[i];
+      if (!img.path) {
+        try {
+          img.path = await ghUploadImage(img.file);
+          renderImgPreview();
+        } catch(e) {
+          toast('图片上传失败: ' + e.message, 'err');
+          if (saveBtn) { saveBtn.textContent = '保存记录'; saveBtn.disabled = false; }
+          throw e;
+        }
+      }
+      results.push({ path: img.path, name: img.name });
+    }
+    if (saveBtn) { saveBtn.textContent = '保存记录'; saveBtn.disabled = false; }
+  } else {
+    // No GitHub or no pending — keep as-is (path already set or fallback base64 via preview)
+    for (const img of pendingImgs) {
+      if (img.path) {
+        results.push({ path: img.path, name: img.name });
+      } else {
+        // fallback: store base64 inline (no GitHub configured)
+        results.push({ src: img.preview, name: img.name });
+      }
+    }
+  }
+  return results;
+}
 
 /* lightbox */
 function openLightbox(src) {

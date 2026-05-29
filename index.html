@@ -1162,70 +1162,71 @@ function setSyncUI(state) {
   label.textContent = map[state] || '未连接';
 }
 
+// Low-level: fetches thoughts.json, updates entries + ghSHA. Throws on error.
+async function ghFetchData() {
+  const r = await ghReq('GET', 'thoughts.json');
+  if (r.status === 404) return; // file doesn't exist yet — that's fine
+  if (!r.ok) throw new Error('GET failed: HTTP ' + r.status);
+  const j = await r.json();
+  ghSHA = j.sha;
+
+  let rawText;
+  if (j.encoding === 'none' || !j.content || j.content.trim() === '') {
+    if (!j.download_url) throw new Error('文件过大且无下载链接');
+    const dl = await fetch(j.download_url, {
+      headers: { 'Authorization': 'Bearer ' + cfg.token }
+    });
+    if (!dl.ok) throw new Error('下载失败 HTTP ' + dl.status);
+    rawText = await dl.text();
+  } else {
+    rawText = decodeB64(j.content);
+  }
+
+  if (!rawText || rawText.trim() === '') throw new Error('thoughts.json 内容为空');
+
+  const parsed = JSON.parse(rawText);
+  entries = parsed.entries || [];
+  saveLocal();
+}
+
+// UI-level pull (shows status + toast)
 async function ghPull() {
   setSyncUI('busy');
   try {
-    const r = await ghReq('GET', 'thoughts.json');
-    if (r.status === 404) { setSyncUI('ok'); return; }
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const j = await r.json();
-    ghSHA = j.sha;
-
-    let rawText;
-    // GitHub truncates files >1MB in the contents API — use download_url instead
-    if (j.encoding === 'none' || !j.content || j.content.trim() === '') {
-      if (!j.download_url) throw new Error('文件过大且无下载链接');
-      const dl = await fetch(j.download_url, {
-        headers: { 'Authorization': 'Bearer ' + cfg.token }
-      });
-      if (!dl.ok) throw new Error('下载失败 ' + dl.status);
-      rawText = await dl.text();
-    } else {
-      rawText = decodeB64(j.content);
-    }
-
-    if (!rawText || rawText.trim() === '') {
-      setSyncUI('fail');
-      toast('thoughts.json 文件内容为空，请检查仓库', 'err');
-      return;
-    }
-
-    const parsed = JSON.parse(rawText);
-    entries = parsed.entries || [];
-    saveLocal();
+    await ghFetchData();
     setSyncUI('ok');
   } catch(e) {
     setSyncUI('fail');
-    toast('GitHub 同步失败: ' + e.message, 'err');
+    toast('同步失败: ' + e.message, 'err');
   }
 }
 
+// Push current entries to GitHub
 async function ghPush(retryCount = 0) {
   if (!cfg.token || !cfg.user || !cfg.repo) { saveLocal(); return; }
   setSyncUI('busy');
   try {
-    // Fetch SHA first if we don't have it yet
-    if (!ghSHA) await ghPull();
+    // Need SHA before pushing to an existing file
+    if (!ghSHA) await ghFetchData(); // throws if network fails — caught below
 
     const payload = JSON.stringify({ entries }, null, 2);
-    const content = encodeB64(payload);
     const body = {
-      message: 'update thoughts ' + new Date().toISOString().slice(0,16),
-      content,
+      message: 'update thoughts ' + new Date().toISOString().slice(0, 16),
+      content: encodeB64(payload),
       ...(ghSHA ? { sha: ghSHA } : {}),
     };
     const r = await ghReq('PUT', 'thoughts.json', body);
     if (!r.ok) {
       const errJson = await r.json().catch(() => ({}));
       const msg = errJson.message || '';
-      // SHA stale — re-fetch SHA only (don't overwrite entries), retry once
+      // Stale SHA — refetch SHA only, restore entries, retry once
       if (retryCount === 0 && (r.status === 409 || r.status === 422 || msg.toLowerCase().includes('sha'))) {
-        const snapshot = entries.slice(); // preserve current entries
-        await ghPull();
-        entries = snapshot;             // restore — don't let ghPull overwrite
-        return ghPush(1);               // retry once
+        const snapshot = entries.slice();
+        await ghFetchData();   // updates ghSHA
+        entries = snapshot;    // don't let fetch overwrite our pending save
+        return ghPush(1);
       }
-      throw new Error(msg || 'HTTP ' + r.status);
+      throw new Error(msg || 'PUT failed: HTTP ' + r.status);
     }
     const j = await r.json();
     ghSHA = j.content.sha;

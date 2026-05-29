@@ -328,6 +328,8 @@ header {
 .cc-reaction{ color: #887020; border-color: rgba(136,112,32,.28); background: rgba(136,112,32,.07); }
 .cc-record  { color: #3a8878; border-color: rgba(58,136,120,.28); background: rgba(58,136,120,.07); }
 .cc-prompt  { color: #5a50a0; border-color: rgba(90,80,160,.28); background: rgba(90,80,160,.07); }
+.cc-ted     { color: #b04828; border-color: rgba(176,72,40,.28);  background: rgba(176,72,40,.07);  }
+.cc-human   { color: #4a7858; border-color: rgba(74,120,88,.28);  background: rgba(74,120,88,.07);  }
 
 /* ═══════════════════════ ENTRY TITLE & STATUS ═══════════════════════ */
 .entry-title {
@@ -754,6 +756,16 @@ header {
         <span class="nav-label">Useful AI Prompt</span>
         <span class="nav-count" id="cnt-prompt">0</span>
       </div>
+      <div class="nav-item" onclick="setFilter('ted')" id="nav-ted">
+        <span class="nav-icon">◐</span>
+        <span class="nav-label">TED IDEAS</span>
+        <span class="nav-count" id="cnt-ted">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('human')" id="nav-human">
+        <span class="nav-icon">◑</span>
+        <span class="nav-label">人类观察</span>
+        <span class="nav-count" id="cnt-human">0</span>
+      </div>
       <hr class="sidebar-divider" />
       <div class="sidebar-section-label">统计</div>
       <div style="padding:4px 8px 8px;font-size:12px;color:var(--text3);font-family:var(--f-mono);line-height:2">
@@ -818,6 +830,12 @@ header {
           </div>
           <div class="cat-pick" data-cat="prompt" onclick="pickCat('prompt')">
             <span class="cat-pick-icon">✧</span><span>Useful AI Prompt</span>
+          </div>
+          <div class="cat-pick" data-cat="ted" onclick="pickCat('ted')">
+            <span class="cat-pick-icon">◐</span><span>TED IDEAS</span>
+          </div>
+          <div class="cat-pick" data-cat="human" onclick="pickCat('human')">
+            <span class="cat-pick-icon">◑</span><span>人类观察</span>
           </div>
         </div>
       </div>
@@ -984,6 +1002,8 @@ const CATS = {
   reaction: { label: 'Reaction', icon: '▶', cls: 'cc-reaction'},
   record:   { label: '内容记录', icon: '□', cls: 'cc-record'  },
   prompt:   { label: 'AI Prompt',icon: '✧', cls: 'cc-prompt'  },
+  ted:      { label: 'TED IDEAS', icon: '◐', cls: 'cc-ted'    },
+  human:    { label: '人类观察', icon: '◑', cls: 'cc-human'   },
 };
 const CAT_FULL = {
   all:      '全部想法',
@@ -995,6 +1015,8 @@ const CAT_FULL = {
   reaction: '内容 Reaction',
   record:   '视频/图文 记录',
   prompt:   'Useful AI Prompt',
+  ted:      'TED IDEAS',
+  human:    '人类观察',
 };
 const PLACEHOLDERS = {
   flash:    '那一瞬间你想到了什么？',
@@ -1005,6 +1027,8 @@ const PLACEHOLDERS = {
   reaction: '写下你对这个内容的 Reaction...',
   record:   '记录和总结这个视频或图文的内容...',
   prompt:   'Paste or write the prompt here...',
+  ted:      '记录这个 TED 演讲的核心 idea...',
+  human:    '记录你观察到的人类行为或现象...',
 };
 
 const cfg = {
@@ -1141,8 +1165,8 @@ async function saveEntry() {
     content,
     notes:     document.getElementById('fNotes').value.trim(),
     done:      document.getElementById('fDone').checked,
-    url:       (selCat === 'reaction' || selCat === 'record') ? document.getElementById('fUrl').value.trim() : '',
-    linkTitle: (selCat === 'reaction' || selCat === 'record') ? document.getElementById('fLinkTitle').value.trim() : '',
+    url:       needsLink(selCat) ? document.getElementById('fUrl').value.trim() : '',
+    linkTitle: needsLink(selCat) ? document.getElementById('fLinkTitle').value.trim() : '',
     createdAt: base ? base.createdAt : now,
     updatedAt: now,
   };
@@ -1210,7 +1234,7 @@ function renderList() {
     const titleH  = e.title ? `<div class="entry-title">${esc(e.title)}</div>` : '';
     const noteH   = e.notes ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
     const linkH   = e.url   ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
-    const statusH = (e.category === 'reaction' || e.category === 'record')
+    const statusH = needsLink(e.category)
       ? (e.done
           ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">✓ 已整理</span>`
           : `<span class="status-badge pending" onclick="event.stopPropagation();quickToggle('${e.id}')">○ 待整理</span>`)
@@ -1277,8 +1301,8 @@ function openAdd(entry = null) {
   document.querySelectorAll('.cat-pick').forEach(el => {
     el.classList.toggle('on', el.dataset.cat === selCat);
   });
-  document.getElementById('rxFields').style.display   = (selCat === 'reaction' || selCat === 'record') ? 'block' : 'none';
-  document.getElementById('doneField').style.display  = (selCat === 'reaction' || selCat === 'record') ? 'block' : 'none';
+  document.getElementById('rxFields').style.display   = needsLink(selCat) ? 'block' : 'none';
+  document.getElementById('doneField').style.display  = needsLink(selCat) ? 'block' : 'none';
   document.getElementById('fContent').placeholder     = PLACEHOLDERS[selCat] || '记录你的想法...';
   document.getElementById('fContent').style.fontFamily = selCat === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('fContent').rows = selCat === 'prompt' ? 10 : 6;
@@ -1287,12 +1311,15 @@ function openAdd(entry = null) {
   setTimeout(() => document.getElementById('fContent').focus(), 50);
 }
 
+function needsLink(cat) {
+  return cat === 'reaction' || cat === 'record' || cat === 'ted';
+}
+
 function pickCat(cat) {
   selCat = cat;
   document.querySelectorAll('.cat-pick').forEach(el => el.classList.toggle('on', el.dataset.cat === cat));
-  const needsLink = cat === 'reaction' || cat === 'record';
-  document.getElementById('rxFields').style.display   = needsLink ? 'block' : 'none';
-  document.getElementById('doneField').style.display  = needsLink ? 'block' : 'none';
+  document.getElementById('rxFields').style.display   = needsLink(cat) ? 'block' : 'none';
+  document.getElementById('doneField').style.display  = needsLink(cat) ? 'block' : 'none';
   document.getElementById('fContent').placeholder     = PLACEHOLDERS[cat];
   document.getElementById('fContent').style.fontFamily = cat === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('fContent').rows = cat === 'prompt' ? 10 : 6;
@@ -1352,7 +1379,7 @@ function openDetail(id) {
 
 function refreshDetailStatus(e) {
   const el = document.getElementById('detailStatus');
-  if (e.category !== 'reaction' && e.category !== 'record') {
+  if (!needsLink(e.category)) {
     el.style.display = 'none';
     return;
   }

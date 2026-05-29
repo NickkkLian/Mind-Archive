@@ -25,9 +25,6 @@
   --red:          #c05050;
   --green:        #3a8a4a;
   --blue:         #4a7aaa;
-  --purple:       #7860b8;
-  --teal:         #3a9888;
-  --rose:         #b06878;
   --f-display:    'Playfair Display', 'Noto Serif SC', Georgia, serif;
   --f-body:       'Noto Serif SC', 'Noto Serif', serif;
   --f-mono:       'JetBrains Mono', 'Fira Code', monospace;
@@ -483,7 +480,7 @@ header {
   letter-spacing: 0.12em;
   margin-bottom: 6px;
 }
-.input, .textarea, .select {
+.input, .textarea {
   width: 100%;
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -496,7 +493,7 @@ header {
   transition: border-color var(--ease);
   line-height: 1.6;
 }
-.input:focus, .textarea:focus, .select:focus { border-color: var(--accent-lo); }
+.input:focus, .textarea:focus { border-color: var(--accent-lo); }
 .input::placeholder, .textarea::placeholder { color: var(--text3); }
 .textarea { resize: vertical; min-height: 90px; }
 .input-hint { margin-top: 4px; font-size: 11px; color: var(--text3); line-height: 1.5; }
@@ -668,14 +665,6 @@ header {
   background: var(--red); color: #fff; border: none;
   cursor: pointer; font-size: 11px;
   display: flex; align-items: center; justify-content: center; z-index: 2;
-}
-.card-img-strip { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
-.card-img-thumb { width: 54px; height: 54px; object-fit: cover; border-radius: var(--r); border: 1px solid var(--border); flex-shrink: 0; }
-.card-img-more {
-  width: 54px; height: 54px; border-radius: var(--r);
-  background: var(--surface2); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; color: var(--text3); font-family: var(--f-mono); flex-shrink: 0;
 }
 .detail-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .detail-gallery-img {
@@ -860,7 +849,7 @@ header {
     <div class="modal-body">
       <div class="fg">
         <div class="label">分类</div>
-        <div class="cat-grid" id="catGrid">
+        <div class="cat-grid">
           <div class="cat-pick" data-cat="flash"    onclick="pickCat('flash')">
             <span class="cat-pick-icon">⚡</span><span>突然想到的一句话</span>
           </div>
@@ -912,7 +901,7 @@ header {
       </div>
 
       <div class="fg">
-        <label class="label" id="contentLabel">内容</label>
+        <label class="label">内容</label>
         <textarea class="textarea" id="fContent" rows="6" placeholder="记录你的想法..."></textarea>
       </div>
 
@@ -922,7 +911,7 @@ header {
       </div>
 
       <div class="fg" id="doneField" style="display:none">
-        <label class="check-row" onclick="">
+        <label class="check-row">
           <input type="checkbox" id="fDone" />
           <span class="check-row-label">标记为已整理</span>
         </label>
@@ -1184,13 +1173,14 @@ async function ghPull() {
     const j = await r.json();
 
     let rawText;
-    if (j.encoding === 'none' || !j.content || j.content.trim() === '') {
+    if (j.encoding === 'none') {
+      // File genuinely too large for Contents API — use the download_url (token already embedded)
       if (!j.download_url) throw new Error('文件过大且无下载链接');
-      // download_url already contains a temporary auth token in the query string
-      // Adding an Authorization header triggers a CORS preflight that raw.githubusercontent.com rejects
       const dl = await fetch(j.download_url);
-      if (!dl.ok) throw new Error('下载失败 HTTP ' + dl.status);
+      if (!dl.ok) throw new Error('大文件下载失败 HTTP ' + dl.status);
       rawText = await dl.text();
+    } else if (!j.content || j.content.replace(/[\s\n]/g, '') === '') {
+      throw new Error('thoughts.json 内容为空，请检查仓库文件');
     } else {
       rawText = decodeB64(j.content);
     }

@@ -1239,19 +1239,6 @@ async function ghPush() {
   }
 }
 
-function ghReq(method, path, body) {
-  const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${path}`;
-  return fetch(url, {
-    method,
-    headers: {
-      'Authorization': 'Bearer ' + cfg.token,
-      'Accept': 'application/vnd.github+json',
-      'Content-Type': 'application/json',
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-}
-
 /* ══════════════════════════════════════════════
    ENTRIES CRUD
 ══════════════════════════════════════════════ */

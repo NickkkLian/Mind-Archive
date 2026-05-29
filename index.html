@@ -326,6 +326,7 @@ header {
 .cc-others  { color: #a84848; border-color: rgba(168,72,72,.28); background: rgba(168,72,72,.07); }
 .cc-reaction{ color: #887020; border-color: rgba(136,112,32,.28); background: rgba(136,112,32,.07); }
 .cc-record  { color: #3a8878; border-color: rgba(58,136,120,.28); background: rgba(58,136,120,.07); }
+.cc-prompt  { color: #5a50a0; border-color: rgba(90,80,160,.28); background: rgba(90,80,160,.07); }
 
 /* ═══════════════════════ EMPTY STATE ═══════════════════════ */
 .empty {
@@ -681,6 +682,11 @@ header {
         <span class="nav-label">视频/图文 记录</span>
         <span class="nav-count" id="cnt-record">0</span>
       </div>
+      <div class="nav-item" onclick="setFilter('prompt')" id="nav-prompt">
+        <span class="nav-icon">✧</span>
+        <span class="nav-label">Useful AI Prompt</span>
+        <span class="nav-count" id="cnt-prompt">0</span>
+      </div>
       <hr class="sidebar-divider" />
       <div class="sidebar-section-label">统计</div>
       <div style="padding:4px 8px 8px;font-size:12px;color:var(--text3);font-family:var(--f-mono);line-height:2">
@@ -742,6 +748,9 @@ header {
           </div>
           <div class="cat-pick" data-cat="record" onclick="pickCat('record')">
             <span class="cat-pick-icon">□</span><span>视频/图文 记录</span>
+          </div>
+          <div class="cat-pick" data-cat="prompt" onclick="pickCat('prompt')">
+            <span class="cat-pick-icon">✧</span><span>Useful AI Prompt</span>
           </div>
         </div>
       </div>
@@ -893,6 +902,7 @@ const CATS = {
   others:   { label: '他人观点', icon: '❝', cls: 'cc-others'  },
   reaction: { label: 'Reaction', icon: '▶', cls: 'cc-reaction'},
   record:   { label: '内容记录', icon: '□', cls: 'cc-record'  },
+  prompt:   { label: 'AI Prompt',icon: '✧', cls: 'cc-prompt'  },
 };
 const CAT_FULL = {
   all:      '全部想法',
@@ -903,6 +913,7 @@ const CAT_FULL = {
   others:   '对他人观点的记录',
   reaction: '内容 Reaction',
   record:   '视频/图文 记录',
+  prompt:   'Useful AI Prompt',
 };
 const PLACEHOLDERS = {
   flash:    '那一瞬间你想到了什么？',
@@ -912,6 +923,7 @@ const PLACEHOLDERS = {
   others:   '记录他人的观点和说法...',
   reaction: '写下你对这个内容的 Reaction...',
   record:   '记录和总结这个视频或图文的内容...',
+  prompt:   'Paste or write the prompt here...',
 };
 
 const cfg = {
@@ -1174,6 +1186,8 @@ function openAdd(entry = null) {
   });
   document.getElementById('rxFields').style.display   = (selCat === 'reaction' || selCat === 'record') ? 'block' : 'none';
   document.getElementById('fContent').placeholder     = PLACEHOLDERS[selCat] || '记录你的想法...';
+  document.getElementById('fContent').style.fontFamily = selCat === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
+  document.getElementById('fContent').rows = selCat === 'prompt' ? 10 : 6;
 
   openModal('addOverlay');
   setTimeout(() => document.getElementById('fContent').focus(), 50);
@@ -1184,6 +1198,8 @@ function pickCat(cat) {
   document.querySelectorAll('.cat-pick').forEach(el => el.classList.toggle('on', el.dataset.cat === cat));
   document.getElementById('rxFields').style.display = (cat === 'reaction' || cat === 'record') ? 'block' : 'none';
   document.getElementById('fContent').placeholder   = PLACEHOLDERS[cat];
+  document.getElementById('fContent').style.fontFamily = cat === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
+  document.getElementById('fContent').rows = cat === 'prompt' ? 10 : 6;
 }
 
 /* ══════════════════════════════════════════════
@@ -1200,6 +1216,8 @@ function openDetail(id) {
   chip.className   = `cat-chip ${cat.cls}`;
 
   document.getElementById('detailBody').textContent = e.content;
+  document.getElementById('detailBody').style.fontFamily = e.category === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
+  document.getElementById('detailBody').style.fontSize   = e.category === 'prompt' ? '13px' : '15px';
 
   const notesEl = document.getElementById('detailNotes');
   notesEl.style.display = e.notes ? 'block' : 'none';

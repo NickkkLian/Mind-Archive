@@ -328,7 +328,73 @@ header {
 .cc-record  { color: #3a8878; border-color: rgba(58,136,120,.28); background: rgba(58,136,120,.07); }
 .cc-prompt  { color: #5a50a0; border-color: rgba(90,80,160,.28); background: rgba(90,80,160,.07); }
 
-/* ═══════════════════════ EMPTY STATE ═══════════════════════ */
+/* ═══════════════════════ ENTRY TITLE & STATUS ═══════════════════════ */
+.entry-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 5px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all var(--ease);
+  user-select: none;
+  flex-shrink: 0;
+}
+.status-badge.pending {
+  color: var(--text3);
+  border-color: var(--border2);
+  background: transparent;
+}
+.status-badge.pending:hover { color: var(--accent); border-color: var(--accent-lo); }
+.status-badge.done {
+  color: var(--green);
+  border-color: rgba(58,138,74,.35);
+  background: rgba(58,138,74,.07);
+}
+
+/* detail title */
+.detail-title {
+  font-family: var(--f-display);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 14px;
+  word-break: break-word;
+}
+
+/* form checkbox row */
+.check-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: border-color var(--ease);
+  user-select: none;
+}
+.check-row:hover { border-color: var(--border2); }
+.check-row input[type=checkbox] {
+  width: 15px; height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.check-row-label { font-size: 13px; color: var(--text2); }
 .empty {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center;
@@ -768,6 +834,11 @@ header {
       </div>
 
       <div class="fg">
+        <label class="label">标题 <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em">可选</span></label>
+        <input class="input" id="fTitle" placeholder="给这条记录起个标题..." />
+      </div>
+
+      <div class="fg">
         <label class="label" id="contentLabel">内容</label>
         <textarea class="textarea" id="fContent" rows="6" placeholder="记录你的想法..."></textarea>
       </div>
@@ -775,6 +846,13 @@ header {
       <div class="fg">
         <label class="label">备注</label>
         <textarea class="textarea" id="fNotes" rows="2" placeholder="补充说明、来源、背景..."></textarea>
+      </div>
+
+      <div class="fg">
+        <label class="check-row" onclick="">
+          <input type="checkbox" id="fDone" />
+          <span class="check-row-label">标记为已整理</span>
+        </label>
       </div>
     </div>
     <div class="modal-foot">
@@ -789,12 +867,14 @@ header {
   <div class="modal modal-md">
     <div class="modal-head">
       <span class="cat-chip" id="detailChip"></span>
+      <span class="status-badge pending" id="detailStatus" onclick="toggleDone()"></span>
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="editCurrent()">编辑</button>
       <button class="btn btn-danger btn-sm" onclick="deleteCurrent()">删除</button>
       <button class="close-btn" onclick="closeModal('detailOverlay')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="detail-title" id="detailTitle" style="display:none"></div>
       <div class="detail-body" id="detailBody"></div>
       <div class="detail-notes" id="detailNotes" style="display:none"></div>
       <div class="detail-link-block" id="detailLink" style="display:none">
@@ -1056,8 +1136,10 @@ async function saveEntry() {
   const entry = {
     id:        editId || uid(),
     category:  selCat,
+    title:     document.getElementById('fTitle').value.trim(),
     content,
     notes:     document.getElementById('fNotes').value.trim(),
+    done:      document.getElementById('fDone').checked,
     url:       (selCat === 'reaction' || selCat === 'record') ? document.getElementById('fUrl').value.trim() : '',
     linkTitle: (selCat === 'reaction' || selCat === 'record') ? document.getElementById('fLinkTitle').value.trim() : '',
     createdAt: base ? base.createdAt : now,
@@ -1124,13 +1206,19 @@ function renderList() {
   list.innerHTML = filtered.map(e => {
     const cat  = CATS[e.category] || {};
     const date = fmtDate(e.createdAt);
-    const noteH = e.notes    ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
-    const linkH = e.url      ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
-    return `<div class="entry-card" onclick="openDetail('${e.id}')">
+    const titleH  = e.title ? `<div class="entry-title">${esc(e.title)}</div>` : '';
+    const noteH   = e.notes ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
+    const linkH   = e.url   ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
+    const statusH = e.done
+      ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">✓ 已整理</span>`
+      : `<span class="status-badge pending" onclick="event.stopPropagation();quickToggle('${e.id}')">○ 待整理</span>`;
+    return `<div class="entry-card${e.done ? ' is-done' : ''}" onclick="openDetail('${e.id}')">
       <div class="entry-header">
         <span class="cat-chip ${cat.cls}">${cat.icon} ${cat.label}</span>
+        ${statusH}
         <span class="entry-date">${date}</span>
       </div>
+      ${titleH}
       <div class="entry-body">${esc(e.content)}</div>
       ${noteH}${linkH}
     </div>`;
@@ -1176,8 +1264,10 @@ function openAdd(entry = null) {
   selCat  = entry ? entry.category : '';
 
   document.getElementById('addTitle').textContent     = entry ? '编辑记录' : '记录新想法';
+  document.getElementById('fTitle').value             = entry ? (entry.title || '') : '';
   document.getElementById('fContent').value           = entry ? entry.content   : '';
   document.getElementById('fNotes').value             = entry ? entry.notes     : '';
+  document.getElementById('fDone').checked            = entry ? !!entry.done    : false;
   document.getElementById('fUrl').value               = entry ? (entry.url || '') : '';
   document.getElementById('fLinkTitle').value         = entry ? (entry.linkTitle || '') : '';
 
@@ -1215,6 +1305,18 @@ function openDetail(id) {
   chip.textContent = `${cat.icon} ${CAT_FULL[e.category]}`;
   chip.className   = `cat-chip ${cat.cls}`;
 
+  // title
+  const titleEl = document.getElementById('detailTitle');
+  if (e.title) {
+    titleEl.textContent = e.title;
+    titleEl.style.display = 'block';
+  } else {
+    titleEl.style.display = 'none';
+  }
+
+  // status badge
+  refreshDetailStatus(e);
+
   document.getElementById('detailBody').textContent = e.content;
   document.getElementById('detailBody').style.fontFamily = e.category === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('detailBody').style.fontSize   = e.category === 'prompt' ? '13px' : '15px';
@@ -1240,6 +1342,37 @@ function openDetail(id) {
   aiOut.innerHTML = '';
 
   openModal('detailOverlay');
+}
+
+function refreshDetailStatus(e) {
+  const el = document.getElementById('detailStatus');
+  if (e.done) {
+    el.textContent  = '✓ 已整理';
+    el.className    = 'status-badge done';
+  } else {
+    el.textContent  = '○ 待整理';
+    el.className    = 'status-badge pending';
+  }
+}
+
+async function toggleDone() {
+  if (!activEntry) return;
+  activEntry.done = !activEntry.done;
+  activEntry.updatedAt = new Date().toISOString();
+  const idx = entries.findIndex(e => e.id === activEntry.id);
+  if (idx > -1) entries[idx] = activEntry;
+  refreshDetailStatus(activEntry);
+  renderList();
+  await ghPush();
+}
+
+async function quickToggle(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  e.done = !e.done;
+  e.updatedAt = new Date().toISOString();
+  renderList();
+  await ghPush();
 }
 
 /* ══════════════════════════════════════════════

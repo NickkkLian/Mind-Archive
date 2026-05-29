@@ -639,6 +639,59 @@ header {
   letter-spacing: 0.06em;
 }
 
+/* ═══════════════════════ IMAGES ═══════════════════════ */
+.img-upload-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--r);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--ease);
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.img-upload-zone:hover, .img-upload-zone.drag-over {
+  border-color: var(--accent-lo);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.img-upload-zone .upload-icon { font-size: 20px; }
+.img-preview-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.img-thumb-wrap { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+.img-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: var(--r); border: 1px solid var(--border); display: block; }
+.img-thumb-del {
+  position: absolute; top: -6px; right: -6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--red); color: #fff; border: none;
+  cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; justify-content: center; z-index: 2;
+}
+.card-img-strip { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+.card-img-thumb { width: 54px; height: 54px; object-fit: cover; border-radius: var(--r); border: 1px solid var(--border); flex-shrink: 0; }
+.card-img-more {
+  width: 54px; height: 54px; border-radius: var(--r);
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--text3); font-family: var(--f-mono); flex-shrink: 0;
+}
+.detail-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.detail-gallery-img {
+  max-width: 100%; max-height: 280px; object-fit: contain;
+  border-radius: var(--r); border: 1px solid var(--border);
+  cursor: zoom-in; transition: opacity var(--ease);
+}
+.detail-gallery-img:hover { opacity: .85; }
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,.9);
+  z-index: 999; display: flex; align-items: center; justify-content: center;
+  padding: 20px; cursor: zoom-out;
+  opacity: 0; pointer-events: none; transition: opacity 0.18s ease;
+}
+.lightbox.open { opacity: 1; pointer-events: all; }
+.lightbox img { max-width: 100%; max-height: 92vh; object-fit: contain; border-radius: var(--r2); }
+
 /* ═══════════════════════ SETTINGS ROWS ═══════════════════════ */
 .settings-section-label {
   font-family: var(--f-mono);
@@ -873,6 +926,18 @@ header {
           <span class="check-row-label">标记为已整理</span>
         </label>
       </div>
+
+      <div class="fg">
+        <div class="label">图片 <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em">可选</span></div>
+        <div class="img-upload-zone" id="imgDropZone"
+          onclick="document.getElementById('imgFileInput').click()"
+          ondragover="imgDragOver(event)" ondragleave="imgDragLeave(event)" ondrop="imgDrop(event)">
+          <div class="upload-icon">🖼</div>
+          点击上传 · 拖拽图片 · 粘贴图片
+        </div>
+        <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none" onchange="imgFileChange(event)" />
+        <div class="img-preview-strip" id="imgPreviewStrip"></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('addOverlay')">取消</button>
@@ -895,6 +960,7 @@ header {
     <div class="modal-body">
       <div class="detail-title" id="detailTitle" style="display:none"></div>
       <div class="detail-body" id="detailBody"></div>
+      <div class="detail-gallery" id="detailGallery"></div>
       <div class="detail-notes" id="detailNotes" style="display:none"></div>
       <div class="detail-link-block" id="detailLink" style="display:none">
         <span class="link-icon">🔗</span>
@@ -984,6 +1050,11 @@ header {
   </div>
 </div>
 
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="" />
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast">
   <span id="toastMsg"></span>
@@ -1041,12 +1112,13 @@ const cfg = {
 /* ══════════════════════════════════════════════
    STATE
 ══════════════════════════════════════════════ */
-let entries    = [];
-let ghSHA      = null;   // SHA of thoughts.json for GitHub updates
-let filter     = 'all';
-let editId     = null;
-let selCat     = '';
-let activEntry = null;
+let entries     = [];
+let ghSHA       = null;
+let filter      = 'all';
+let editId      = null;
+let selCat      = '';
+let activEntry  = null;
+let pendingImgs = []; // [{src: dataURL, name:''}] staged in the add form
 
 /* ══════════════════════════════════════════════
    BOOT
@@ -1165,6 +1237,7 @@ async function saveEntry() {
     content,
     notes:     document.getElementById('fNotes').value.trim(),
     done:      document.getElementById('fDone').checked,
+    images:    pendingImgs.slice(),
     url:       needsLink(selCat) ? document.getElementById('fUrl').value.trim() : '',
     linkTitle: needsLink(selCat) ? document.getElementById('fLinkTitle').value.trim() : '',
     createdAt: base ? base.createdAt : now,
@@ -1179,6 +1252,7 @@ async function saveEntry() {
   }
 
   editId = null;
+  pendingImgs = [];
   closeModal('addOverlay');
   renderList();
   updateCounts();
@@ -1234,6 +1308,11 @@ function renderList() {
     const titleH  = e.title ? `<div class="entry-title">${esc(e.title)}</div>` : '';
     const noteH   = e.notes ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
     const linkH   = e.url   ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
+    const imgs    = e.images || [];
+    const imgH    = imgs.length ? `<div class="card-img-strip">
+      ${imgs.slice(0,3).map(img => `<img class="card-img-thumb" src="${img.src}" alt="" />`).join('')}
+      ${imgs.length > 3 ? `<div class="card-img-more">+${imgs.length - 3}</div>` : ''}
+    </div>` : '';
     const statusH = needsLink(e.category)
       ? (e.done
           ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">✓ 已整理</span>`
@@ -1247,7 +1326,7 @@ function renderList() {
       </div>
       ${titleH}
       <div class="entry-body">${esc(e.content)}</div>
-      ${noteH}${linkH}
+      ${imgH}${noteH}${linkH}
     </div>`;
   }).join('');
 }
@@ -1297,6 +1376,8 @@ function openAdd(entry = null) {
   document.getElementById('fDone').checked            = entry ? !!entry.done    : false;
   document.getElementById('fUrl').value               = entry ? (entry.url || '') : '';
   document.getElementById('fLinkTitle').value         = entry ? (entry.linkTitle || '') : '';
+  pendingImgs = entry ? (entry.images || []).slice() : [];
+  renderImgPreview();
 
   document.querySelectorAll('.cat-pick').forEach(el => {
     el.classList.toggle('on', el.dataset.cat === selCat);
@@ -1353,6 +1434,19 @@ function openDetail(id) {
   document.getElementById('detailBody').textContent = e.content;
   document.getElementById('detailBody').style.fontFamily = e.category === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('detailBody').style.fontSize   = e.category === 'prompt' ? '13px' : '15px';
+
+  // images
+  const gallery = document.getElementById('detailGallery');
+  const imgs = e.images || [];
+  if (imgs.length) {
+    gallery.innerHTML = imgs.map(img =>
+      `<img class="detail-gallery-img" src="${img.src}" alt="${esc(img.name || '')}" onclick="openLightbox(this.src)" />`
+    ).join('');
+    gallery.style.display = '';
+  } else {
+    gallery.innerHTML = '';
+    gallery.style.display = 'none';
+  }
 
   const notesEl = document.getElementById('detailNotes');
   notesEl.style.display = e.notes ? 'block' : 'none';
@@ -1594,10 +1688,82 @@ function decodeB64(str) {
 }
 
 /* ══════════════════════════════════════════════
+   IMAGE HANDLING
+══════════════════════════════════════════════ */
+function fileToDataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result);
+    r.onerror = () => rej(new Error('读取失败'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function addImgFiles(files) {
+  for (const f of files) {
+    if (!f.type.startsWith('image/')) continue;
+    if (f.size > 5 * 1024 * 1024) { toast('图片超过 5MB，已跳过', 'err'); continue; }
+    const src = await fileToDataURL(f);
+    pendingImgs.push({ src, name: f.name });
+  }
+  renderImgPreview();
+}
+
+function renderImgPreview() {
+  const strip = document.getElementById('imgPreviewStrip');
+  strip.innerHTML = pendingImgs.map((img, i) => `
+    <div class="img-thumb-wrap">
+      <img class="img-thumb" src="${img.src}" alt="${esc(img.name)}" />
+      <button class="img-thumb-del" onclick="removeImg(${i})" title="删除">✕</button>
+    </div>`).join('');
+}
+
+function removeImg(i) {
+  pendingImgs.splice(i, 1);
+  renderImgPreview();
+}
+
+function imgFileChange(e) {
+  addImgFiles(Array.from(e.target.files));
+  e.target.value = '';
+}
+function imgDragOver(e)  { e.preventDefault(); document.getElementById('imgDropZone').classList.add('drag-over'); }
+function imgDragLeave()  { document.getElementById('imgDropZone').classList.remove('drag-over'); }
+function imgDrop(e) {
+  e.preventDefault();
+  imgDragLeave();
+  addImgFiles(Array.from(e.dataTransfer.files));
+}
+
+// paste anywhere in the add modal
+document.addEventListener('paste', e => {
+  const overlay = document.getElementById('addOverlay');
+  if (!overlay.classList.contains('open')) return;
+  const items = Array.from(e.clipboardData?.items || []);
+  const imgItems = items.filter(it => it.type.startsWith('image/'));
+  if (!imgItems.length) return;
+  imgItems.forEach(it => {
+    const f = it.getAsFile();
+    if (f) addImgFiles([f]);
+  });
+});
+
+/* lightbox */
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+}
+
+/* ══════════════════════════════════════════════
    KEYBOARD SHORTCUTS
 ══════════════════════════════════════════════ */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
+    closeLightbox();
     document.querySelectorAll('.overlay.open').forEach(el => el.classList.remove('open'));
   }
   if ((e.metaKey || e.ctrlKey) && e.key === 'n') {

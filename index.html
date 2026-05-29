@@ -933,7 +933,8 @@ header {
           onclick="document.getElementById('imgFileInput').click()"
           ondragover="imgDragOver(event)" ondragleave="imgDragLeave(event)" ondrop="imgDrop(event)">
           <div class="upload-icon">🖼</div>
-          点击上传 · 拖拽图片 · 粘贴图片
+          点击上传 · 拖拽图片 · 粘贴图片<br>
+          <span style="font-size:10px;opacity:.7">支持 JPG / PNG / GIF / WebP，不支持 HEIC</span>
         </div>
         <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none" onchange="imgFileChange(event)" />
         <div class="img-preview-strip" id="imgPreviewStrip"></div>
@@ -1309,10 +1310,7 @@ function renderList() {
     const noteH   = e.notes ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
     const linkH   = e.url   ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
     const imgs    = e.images || [];
-    const imgH    = imgs.length ? `<div class="card-img-strip">
-      ${imgs.slice(0,3).map(img => `<img class="card-img-thumb" src="${img.src}" alt="" />`).join('')}
-      ${imgs.length > 3 ? `<div class="card-img-more">+${imgs.length - 3}</div>` : ''}
-    </div>` : '';
+    const imgH    = imgs.length ? `<div class="card-img-strip"><span style="font-size:11px;color:var(--text3);font-family:var(--f-mono)">🖼 ${imgs.length} 张图片</span></div>` : '';
     const statusH = needsLink(e.category)
       ? (e.done
           ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">✓ 已整理</span>`
@@ -1702,6 +1700,12 @@ function fileToDataURL(file) {
 async function addImgFiles(files) {
   for (const f of files) {
     if (!f.type.startsWith('image/')) continue;
+    const isHeic = f.type === 'image/heic' || f.type === 'image/heif'
+      || f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif');
+    if (isHeic) {
+      toast('不支持 HEIC 格式，请在相册中先转换为 JPG（分享 → 存储为文件 → JPG）', 'err');
+      continue;
+    }
     if (f.size > 5 * 1024 * 1024) { toast('图片超过 5MB，已跳过', 'err'); continue; }
     const src = await fileToDataURL(f);
     pendingImgs.push({ src, name: f.name });

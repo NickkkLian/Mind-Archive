@@ -734,7 +734,7 @@ header {
         <span class="nav-count" id="cnt-draft">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('others')" id="nav-others">
-        <span class="nav-icon">❝</span>
+        <span class="nav-icon">※</span>
         <span class="nav-label">他人观点</span>
         <span class="nav-count" id="cnt-others">0</span>
       </div>
@@ -807,7 +807,7 @@ header {
             <span class="cat-pick-icon">◎</span><span>可输出的成稿</span>
           </div>
           <div class="cat-pick" data-cat="others"   onclick="pickCat('others')">
-            <span class="cat-pick-icon">❝</span><span>对他人观点的记录</span>
+            <span class="cat-pick-icon">※</span><span>对他人观点的记录</span>
           </div>
           <div class="cat-pick" data-cat="reaction" onclick="pickCat('reaction')">
             <span class="cat-pick-icon">▶</span><span>内容 Reaction</span>
@@ -979,7 +979,7 @@ const CATS = {
   moment:   { label: '触动时刻', icon: '✦', cls: 'cc-moment'  },
   view:     { label: '完整观点', icon: '◉', cls: 'cc-view'    },
   draft:    { label: '成稿',      icon: '◎', cls: 'cc-draft'   },
-  others:   { label: '他人观点', icon: '❝', cls: 'cc-others'  },
+  others:   { label: '他人观点', icon: '※', cls: 'cc-others'  },
   reaction: { label: 'Reaction', icon: '▶', cls: 'cc-reaction'},
   record:   { label: '内容记录', icon: '□', cls: 'cc-record'  },
   prompt:   { label: 'AI Prompt',icon: '✧', cls: 'cc-prompt'  },

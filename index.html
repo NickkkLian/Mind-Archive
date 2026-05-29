@@ -850,7 +850,7 @@ header {
         <textarea class="textarea" id="fNotes" rows="2" placeholder="补充说明、来源、背景..."></textarea>
       </div>
 
-      <div class="fg">
+      <div class="fg" id="doneField" style="display:none">
         <label class="check-row" onclick="">
           <input type="checkbox" id="fDone" />
           <span class="check-row-label">标记为已整理</span>
@@ -1211,9 +1211,11 @@ function renderList() {
     const titleH  = e.title ? `<div class="entry-title">${esc(e.title)}</div>` : '';
     const noteH   = e.notes ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
     const linkH   = e.url   ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
-    const statusH = e.done
-      ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">✓ 已整理</span>`
-      : `<span class="status-badge pending" onclick="event.stopPropagation();quickToggle('${e.id}')">○ 待整理</span>`;
+    const statusH = (e.category === 'reaction' || e.category === 'record')
+      ? (e.done
+          ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">✓ 已整理</span>`
+          : `<span class="status-badge pending" onclick="event.stopPropagation();quickToggle('${e.id}')">○ 待整理</span>`)
+      : '';
     return `<div class="entry-card${e.done ? ' is-done' : ''}" onclick="openDetail('${e.id}')">
       <div class="entry-header">
         <span class="cat-chip ${cat.cls}">${cat.icon} ${cat.label}</span>
@@ -1277,6 +1279,7 @@ function openAdd(entry = null) {
     el.classList.toggle('on', el.dataset.cat === selCat);
   });
   document.getElementById('rxFields').style.display   = (selCat === 'reaction' || selCat === 'record') ? 'block' : 'none';
+  document.getElementById('doneField').style.display  = (selCat === 'reaction' || selCat === 'record') ? 'block' : 'none';
   document.getElementById('fContent').placeholder     = PLACEHOLDERS[selCat] || '记录你的想法...';
   document.getElementById('fContent').style.fontFamily = selCat === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('fContent').rows = selCat === 'prompt' ? 10 : 6;
@@ -1288,8 +1291,10 @@ function openAdd(entry = null) {
 function pickCat(cat) {
   selCat = cat;
   document.querySelectorAll('.cat-pick').forEach(el => el.classList.toggle('on', el.dataset.cat === cat));
-  document.getElementById('rxFields').style.display = (cat === 'reaction' || cat === 'record') ? 'block' : 'none';
-  document.getElementById('fContent').placeholder   = PLACEHOLDERS[cat];
+  const needsLink = cat === 'reaction' || cat === 'record';
+  document.getElementById('rxFields').style.display   = needsLink ? 'block' : 'none';
+  document.getElementById('doneField').style.display  = needsLink ? 'block' : 'none';
+  document.getElementById('fContent').placeholder     = PLACEHOLDERS[cat];
   document.getElementById('fContent').style.fontFamily = cat === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('fContent').rows = cat === 'prompt' ? 10 : 6;
 }
@@ -1348,12 +1353,17 @@ function openDetail(id) {
 
 function refreshDetailStatus(e) {
   const el = document.getElementById('detailStatus');
+  if (e.category !== 'reaction' && e.category !== 'record') {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = '';
   if (e.done) {
-    el.textContent  = '✓ 已整理';
-    el.className    = 'status-badge done';
+    el.textContent = '✓ 已整理';
+    el.className   = 'status-badge done';
   } else {
-    el.textContent  = '○ 待整理';
-    el.className    = 'status-badge pending';
+    el.textContent = '○ 待整理';
+    el.className   = 'status-badge pending';
   }
 }
 

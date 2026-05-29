@@ -244,7 +244,8 @@ header {
 .search-input::placeholder { color: var(--text3); }
 
 /* ═══════════════════════ ENTRIES ═══════════════════════ */
-.entries-scroll { flex: 1; padding: 16px 20px; }.entries-list { display: flex; flex-direction: column; gap: 10px; }
+.entries-scroll { flex: 1; padding: 16px 20px; }
+.entries-list { display: flex; flex-direction: column; gap: 10px; }
 
 .entry-card {
   background: var(--surface);
@@ -1141,7 +1142,10 @@ function loadLocal() {
   try {
     const d = JSON.parse(localStorage.getItem('ma_local') || '{}');
     entries = d.entries || [];
-  } catch(e) {}
+  } catch(e) {
+    entries = [];
+    console.warn('本地缓存损坏，已重置:', e.message);
+  }
 }
 function saveLocal() {
   localStorage.setItem('ma_local', JSON.stringify({ entries }));
@@ -1196,10 +1200,13 @@ async function ghPull() {
   }
 }
 
-async function ghPush() {
+async function ghPush(retryCount = 0) {
   if (!cfg.token || !cfg.user || !cfg.repo) { saveLocal(); return; }
   setSyncUI('busy');
   try {
+    // Fetch SHA first if we don't have it yet
+    if (!ghSHA) await ghPull();
+
     const payload = JSON.stringify({ entries }, null, 2);
     const content = encodeB64(payload);
     const body = {
@@ -1210,13 +1217,15 @@ async function ghPush() {
     const r = await ghReq('PUT', 'thoughts.json', body);
     if (!r.ok) {
       const errJson = await r.json().catch(() => ({}));
-      // SHA conflict — re-pull then retry once
-      if (r.status === 409 || (errJson.message || '').includes('SHA')) {
-        toast('SHA 冲突，正在重新同步...', '');
+      const msg = errJson.message || '';
+      // SHA stale — re-fetch SHA only (don't overwrite entries), retry once
+      if (retryCount === 0 && (r.status === 409 || r.status === 422 || msg.toLowerCase().includes('sha'))) {
+        const snapshot = entries.slice(); // preserve current entries
         await ghPull();
-        return ghPush();
+        entries = snapshot;             // restore — don't let ghPull overwrite
+        return ghPush(1);               // retry once
       }
-      throw new Error(errJson.message || 'HTTP ' + r.status);
+      throw new Error(msg || 'HTTP ' + r.status);
     }
     const j = await r.json();
     ghSHA = j.content.sha;
@@ -1225,7 +1234,7 @@ async function ghPush() {
     toast('已同步到 GitHub', 'ok');
   } catch(e) {
     setSyncUI('fail');
-    saveLocal(); // always keep local copy safe
+    saveLocal();
     toast('同步失败: ' + e.message, 'err');
   }
 }
@@ -1321,6 +1330,7 @@ function renderList() {
   const filtered = entries.filter(e => {
     const catOk = filter === 'all' || e.category === filter;
     const qOk   = !q || e.content.toLowerCase().includes(q)
+                     || (e.title     && e.title.toLowerCase().includes(q))
                      || (e.notes     && e.notes.toLowerCase().includes(q))
                      || (e.linkTitle && e.linkTitle.toLowerCase().includes(q));
     return catOk && qOk;
@@ -1351,7 +1361,7 @@ function renderList() {
           ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">✓ 已整理</span>`
           : `<span class="status-badge pending" onclick="event.stopPropagation();quickToggle('${e.id}')">○ 待整理</span>`)
       : '';
-    return `<div class="entry-card${e.done ? ' is-done' : ''}" onclick="openDetail('${e.id}')">
+    return `<div class="entry-card" onclick="openDetail('${e.id}')">
       <div class="entry-header">
         <span class="cat-chip ${cat.cls}">${cat.icon} ${cat.label}</span>
         ${statusH}
@@ -1551,7 +1561,11 @@ async function quickToggle(id) {
 /* ══════════════════════════════════════════════
    SUMMARY MODAL
 ══════════════════════════════════════════════ */
-function openSummary() { openModal('summaryOverlay'); }
+function openSummary() {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.getElementById('summaryOut').textContent = '点击上方按钮开始 AI 分析...';
+  openModal('summaryOverlay');
+}
 
 function summaryTab(btn, mode) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1708,7 +1722,7 @@ function toast(msg, type = '') {
   document.getElementById('toastMsg').textContent = msg;
   el.className = 'toast show' + (type ? ' ' + type : '');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+  toastTimer = setTimeout(() => el.classList.remove('show'), type === 'err' ? 6000 : 3200);
 }
 
 /* ══════════════════════════════════════════════
@@ -1722,10 +1736,12 @@ function fmtDate(iso) {
   return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 function encodeB64(str) {
-  return btoa(unescape(encodeURIComponent(str)));
+  return btoa(new TextEncoder().encode(str).reduce((s, b) => s + String.fromCharCode(b), ''));
 }
 function decodeB64(str) {
-  return decodeURIComponent(escape(atob(str.replace(/\n/g, ''))));
+  const bin = atob(str.replace(/\n/g, ''));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 /* ══════════════════════════════════════════════

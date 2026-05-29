@@ -1186,9 +1186,9 @@ async function ghPull() {
     let rawText;
     if (j.encoding === 'none' || !j.content || j.content.trim() === '') {
       if (!j.download_url) throw new Error('文件过大且无下载链接');
-      const dl = await fetch(j.download_url, {
-        headers: { 'Authorization': 'Bearer ' + cfg.token }
-      });
+      // download_url already contains a temporary auth token in the query string
+      // Adding an Authorization header triggers a CORS preflight that raw.githubusercontent.com rejects
+      const dl = await fetch(j.download_url);
       if (!dl.ok) throw new Error('下载失败 HTTP ' + dl.status);
       rawText = await dl.text();
     } else {
@@ -1472,15 +1472,34 @@ function openDetail(id) {
   document.getElementById('detailBody').style.fontFamily = e.category === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('detailBody').style.fontSize   = e.category === 'prompt' ? '13px' : '15px';
 
-  // images
+  // images — load async since private repos need API auth
   const gallery = document.getElementById('detailGallery');
   const imgs = e.images || [];
   if (imgs.length) {
-    gallery.innerHTML = imgs.map(img => {
-      const src = img.path ? imgRawURL(img.path) : (img.src || '');
-      return `<img class="detail-gallery-img" src="${src}" alt="${esc(img.name || '')}" onclick="openLightbox('${src}')" />`;
-    }).join('');
     gallery.style.display = '';
+    gallery.innerHTML = imgs.map((img, i) =>
+      `<div id="igw${i}" style="min-width:80px;min-height:60px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3)">加载中...</div>`
+    ).join('');
+    imgs.forEach((img, i) => {
+      const wrap = document.getElementById('igw' + i);
+      if (!wrap) return;
+      if (!img.path) {
+        // Legacy base64 format
+        const src = img.src || '';
+        wrap.outerHTML = `<img class="detail-gallery-img" src="${src}" onclick="openLightbox('${src}')" />`;
+        return;
+      }
+      resolveImgSrc(img.path).then(src => {
+        const el = document.getElementById('igw' + i);
+        if (!el) return;
+        if (src) {
+          const escaped = src.startsWith('data:') ? src : esc(src);
+          el.outerHTML = `<img class="detail-gallery-img" src="${src}" onclick="openLightbox('${escaped}')" />`;
+        } else {
+          el.textContent = '图片加载失败';
+        }
+      });
+    });
   } else {
     gallery.innerHTML = '';
     gallery.style.display = 'none';
@@ -1747,6 +1766,26 @@ function imgRawURL(path) {
   return `https://raw.githubusercontent.com/${cfg.user}/${cfg.repo}/main/${path}`;
 }
 
+// For private repos, raw URLs need auth which <img> tags can't send.
+// Fetch via API and return a data: URL (works for images up to ~1MB).
+async function resolveImgSrc(path) {
+  if (!cfg.token || !cfg.user || !cfg.repo) return imgRawURL(path);
+  try {
+    const r = await ghReq('GET', path);
+    if (!r.ok) return '';
+    const j = await r.json();
+    if (j.content) {
+      const b64 = j.content.replace(/\n/g, '');
+      const ext = path.split('.').pop().toLowerCase();
+      const mime = { png:'image/png', gif:'image/gif', webp:'image/webp', jpg:'image/jpeg', jpeg:'image/jpeg' }[ext] || 'image/jpeg';
+      return `data:${mime};base64,${b64}`;
+    }
+    // file >1MB: download_url token is already in URL, no auth header needed
+    if (j.download_url) return j.download_url;
+    return '';
+  } catch(e) { return ''; }
+}
+
 function fileToDataURL(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
@@ -1801,16 +1840,25 @@ async function addImgFiles(files) {
 function renderImgPreview() {
   const strip = document.getElementById('imgPreviewStrip');
   strip.innerHTML = pendingImgs.map((img, i) => {
-    const src = img.preview || (img.path && cfg.user ? imgRawURL(img.path) : '');
+    const src = img.preview || '';
     const badge = img.path
       ? `<span style="position:absolute;bottom:3px;left:3px;background:rgba(58,138,74,.85);color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;font-family:var(--f-mono)">✓</span>`
       : `<span style="position:absolute;bottom:3px;left:3px;background:rgba(200,149,58,.85);color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;font-family:var(--f-mono)">待传</span>`;
     return `<div class="img-thumb-wrap">
-      <img class="img-thumb" src="${src}" alt="${esc(img.name)}" />
+      <img class="img-thumb" id="pt${i}" src="${src}" alt="${esc(img.name)}" />
       ${badge}
       <button class="img-thumb-del" onclick="removeImg(${i})" title="删除">✕</button>
     </div>`;
   }).join('');
+  // Async-load previews for already-uploaded images (no local preview)
+  pendingImgs.forEach((img, i) => {
+    if (!img.preview && img.path) {
+      resolveImgSrc(img.path).then(src => {
+        const el = document.getElementById('pt' + i);
+        if (el && src) el.src = src;
+      });
+    }
+  });
 }
 
 function removeImg(i) {

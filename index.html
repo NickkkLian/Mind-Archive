@@ -1089,7 +1089,7 @@ const PLACEHOLDERS = {
   reaction: '写下你对这个内容的 Reaction...',
   record:   '记录和总结这个视频或图文的内容...',
   prompt:   'Paste or write the prompt here...',
-  ted:      '记录这个 TED 演讲的核心 idea...',
+  ted:      '如果我要做一个 TED 演讲，我想说什么...',
   human:    '记录你观察到的人类行为或现象...',
 };
 
@@ -1420,7 +1420,7 @@ function openAdd(entry = null) {
 }
 
 function needsLink(cat) {
-  return cat === 'reaction' || cat === 'record' || cat === 'ted';
+  return cat === 'reaction' || cat === 'record';
 }
 
 function pickCat(cat) {

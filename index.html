@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>思维库 · Mind Archive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+SC:wght@300;400;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg:           #f5f8f5;
+  --surface:      #ffffff;
+  --surface2:     #eef3ee;
+  --surface3:     #e4ede4;
+  --border:       #d4e2d4;
+  --border2:      #bdd4bd;
+  --text:         #1e2d1e;
+  --text2:        #5a7a5a;
+  --text3:        #96b096;
+  --accent:       #3a8a4a;
+  --accent-hi:    #2d7040;
+  --accent-lo:    #8abf94;
+  --accent-bg:    rgba(58,138,74,0.08);
+  --red:          #c05050;
+  --green:        #3a8a4a;
+  --blue:         #4a7aaa;
+  --purple:       #7860b8;
+  --teal:         #3a9888;
+  --rose:         #b06878;
+  --f-display:    'Playfair Display', 'Noto Serif SC', Georgia, serif;
+  --f-body:       'Noto Serif SC', 'Noto Serif', serif;
+  --f-mono:       'JetBrains Mono', 'Fira Code', monospace;
+  --r:            4px;
+  --r2:           8px;
+  --r3:           12px;
+  --ease:         0.18s cubic-bezier(0.4,0,0.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--f-body);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ═══════════════════════ SCROLLBAR ═══════════════════════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-lo); }
+
+/* ═══════════════════════ HEADER ═══════════════════════ */
+header {
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+}
+.logo {
+  font-family: var(--f-display);
+  font-size: 18px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.logo-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border2);
+  flex-shrink: 0;
+}
+.logo-sub {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.header-spacer { flex: 1; }
+.sync-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.06em;
+}
+.sync-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+  transition: background var(--ease);
+}
+.sync-dot.ok    { background: var(--green); }
+.sync-dot.busy  { background: var(--accent); animation: blink 0.9s infinite; }
+.sync-dot.fail  { background: var(--red); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ═══════════════════════ BUTTONS ═══════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--r);
+  font-family: var(--f-body);
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--ease);
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.btn-primary:hover { background: var(--accent-hi); border-color: var(--accent-hi); }
+.btn-ghost { background: transparent; color: var(--text2); border-color: var(--border2); }
+.btn-ghost:hover { color: var(--text); border-color: var(--text3); background: var(--surface2); }
+.btn-danger { background: transparent; color: var(--red); border-color: rgba(191,80,80,.35); }
+.btn-danger:hover { background: rgba(191,80,80,.1); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: var(--r); }
+
+/* ═══════════════════════ LAYOUT ═══════════════════════ */
+.app {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: calc(100vh - 52px);
+}
+
+/* ═══════════════════════ SIDEBAR ═══════════════════════ */
+.sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-inner { overflow-y: auto; flex: 1; padding: 14px 10px; }
+.sidebar-section-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 6px 8px 5px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all var(--ease);
+  color: var(--text2);
+  font-size: 13px;
+  border: 1px solid transparent;
+  margin-bottom: 1px;
+  user-select: none;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active {
+  background: var(--surface2);
+  color: var(--accent);
+  border-color: var(--border);
+}
+.nav-icon { font-size: 14px; flex-shrink: 0; width: 18px; text-align: center; }
+.nav-label { flex: 1; }
+.nav-count {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.nav-item.active .nav-count { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-lo); }
+.sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 10px 8px; }
+
+/* ═══════════════════════ MAIN ═══════════════════════ */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.main-toolbar {
+  padding: 14px 22px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.main-title-wrap { flex: 1; min-width: 0; }
+.main-title {
+  font-family: var(--f-display);
+  font-size: 17px;
+  color: var(--text);
+  font-weight: 400;
+}
+.main-meta {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+.search-wrap {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 0 10px;
+  transition: border-color var(--ease);
+  min-width: 200px;
+}
+.search-wrap:focus-within { border-color: var(--accent-lo); }
+.search-wrap svg { color: var(--text3); flex-shrink: 0; }
+.search-input {
+  background: none; border: none; outline: none;
+  color: var(--text);
+  font-family: var(--f-body);
+  font-size: 13px;
+  padding: 7px 0;
+  width: 100%;
+}
+.search-input::placeholder { color: var(--text3); }
+
+/* ═══════════════════════ ENTRIES ═══════════════════════ */
+.entries-scroll { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.entries-list { display: flex; flex-direction: column; gap: 10px; }
+
+.entry-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: all var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.entry-card::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--border2);
+  transition: background var(--ease);
+}
+.entry-card:hover {
+  border-color: var(--accent-lo);
+  background: var(--surface2);
+}
+.entry-card:hover::after { background: var(--accent); }
+
+.entry-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.cat-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid;
+  letter-spacing: 0.04em;
+}
+.entry-date {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-left: auto;
+}
+.entry-body {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.entry-notes {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--text2);
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.entry-link {
+  margin-top: 6px;
+  display: flex; align-items: center; gap: 5px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--accent-lo);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ═══════════════════════ CATEGORY COLORS ═══════════════════════ */
+.cc-flash   { color: #3a78a8; border-color: rgba(58,120,168,.28); background: rgba(58,120,168,.07); }
+.cc-moment  { color: #906830; border-color: rgba(144,104,48,.28); background: rgba(144,104,48,.07); }
+.cc-view    { color: #3a8a5a; border-color: rgba(58,138,90,.28); background: rgba(58,138,90,.07); }
+.cc-draft   { color: #7058a8; border-color: rgba(112,88,168,.28); background: rgba(112,88,168,.07); }
+.cc-others  { color: #a84848; border-color: rgba(168,72,72,.28); background: rgba(168,72,72,.07); }
+.cc-reaction{ color: #887020; border-color: rgba(136,112,32,.28); background: rgba(136,112,32,.07); }
+.cc-record  { color: #3a8878; border-color: rgba(58,136,120,.28); background: rgba(58,136,120,.07); }
+
+/* ═══════════════════════ EMPTY STATE ═══════════════════════ */
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
+  padding: 70px 20px;
+  color: var(--text3);
+  text-align: center;
+}
+.empty-glyph { font-size: 40px; margin-bottom: 14px; opacity: .6; }
+.empty-title { font-family: var(--f-display); font-size: 18px; color: var(--text2); margin-bottom: 8px; }
+.empty-desc { font-size: 13px; line-height: 1.7; max-width: 320px; }
+
+/* ═══════════════════════ OVERLAY / MODAL ═══════════════════════ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(30,45,30,.35);
+  backdrop-filter: blur(5px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.overlay.open .modal { transform: translateY(0) scale(1); opacity: 1; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r3);
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(24px) scale(0.98);
+  opacity: 0;
+  transition: transform 0.22s cubic-bezier(0.34,1.36,0.64,1), opacity 0.18s ease;
+  overflow: hidden;
+}
+.modal-sm  { max-width: 520px; }
+.modal-md  { max-width: 660px; }
+.modal-lg  { max-width: 780px; }
+
+.modal-head {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.modal-title { font-family: var(--f-display); font-size: 17px; font-weight: 400; flex: 1; }
+.modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
+.modal-foot {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.close-btn {
+  width: 28px; height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  transition: all var(--ease);
+  flex-shrink: 0;
+}
+.close-btn:hover { color: var(--text); border-color: var(--text3); }
+
+/* ═══════════════════════ FORM ═══════════════════════ */
+.fg { margin-bottom: 16px; }
+.fg:last-child { margin-bottom: 0; }
+.label {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+.input, .textarea, .select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--f-body);
+  font-size: 14px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color var(--ease);
+  line-height: 1.6;
+}
+.input:focus, .textarea:focus, .select:focus { border-color: var(--accent-lo); }
+.input::placeholder, .textarea::placeholder { color: var(--text3); }
+.textarea { resize: vertical; min-height: 90px; }
+.input-hint { margin-top: 4px; font-size: 11px; color: var(--text3); line-height: 1.5; }
+.input-hint a { color: var(--accent-lo); text-decoration: none; }
+.input-hint a:hover { color: var(--accent); }
+
+/* Category picker grid */
+.cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.cat-pick {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all var(--ease);
+  color: var(--text2);
+  font-size: 13px;
+  background: var(--surface2);
+  line-height: 1.4;
+}
+.cat-pick:hover { border-color: var(--border2); color: var(--text); background: var(--surface3); }
+.cat-pick.on { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.cat-pick-icon { flex-shrink: 0; width: 18px; text-align: center; }
+
+/* ═══════════════════════ DETAIL VIEW ═══════════════════════ */
+.detail-body {
+  font-size: 15px;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+}
+.detail-notes {
+  margin-top: 14px;
+  padding: 11px 15px;
+  background: var(--surface2);
+  border-radius: var(--r);
+  border-left: 3px solid var(--accent-lo);
+  font-size: 13px;
+  color: var(--text2);
+  font-style: italic;
+  line-height: 1.65;
+}
+.detail-link-block {
+  margin-top: 12px;
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-size: 13px;
+}
+.detail-link-block .link-icon { color: var(--text3); flex-shrink: 0; padding-top: 1px; }
+.link-title { font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+.link-url { font-family: var(--f-mono); font-size: 11px; }
+.link-url a { color: var(--accent); text-decoration: none; word-break: break-all; }
+.link-url a:hover { text-decoration: underline; }
+
+/* ═══════════════════════ AI PANEL ═══════════════════════ */
+.ai-panel {
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+.ai-panel-label {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.ai-panel-label::before {
+  content: '';
+  width: 12px; height: 1px;
+  background: var(--accent-lo);
+}
+.ai-btns { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+.ai-out {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 13px 15px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 56px;
+  display: none;
+}
+.ai-out.visible { display: block; }
+.ai-loading {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--text3);
+  font-family: var(--f-mono);
+  font-size: 11px;
+}
+.dots { display: flex; gap: 4px; }
+.dots span {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent-lo);
+  animation: dotpulse 1.1s infinite;
+}
+.dots span:nth-child(2) { animation-delay:.18s; }
+.dots span:nth-child(3) { animation-delay:.36s; }
+@keyframes dotpulse { 0%,80%,100%{transform:scale(.65);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+/* ═══════════════════════ TOAST ═══════════════════════ */
+.toast {
+  position: fixed; bottom: 18px; right: 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  padding: 10px 16px;
+  font-size: 12px;
+  font-family: var(--f-mono);
+  color: var(--text2);
+  display: flex; align-items: center; gap: 8px;
+  z-index: 900;
+  transform: translateY(70px);
+  opacity: 0;
+  transition: all 0.28s cubic-bezier(0.34,1.4,0.64,1);
+  max-width: 340px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.ok   { border-color: rgba(90,150,104,.45); color: var(--green); }
+.toast.err  { border-color: rgba(191,80,80,.45);  color: var(--red); }
+
+/* ═══════════════════════ DETAIL TIMESTAMP ═══════════════════════ */
+.detail-ts {
+  margin-top: 16px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.06em;
+}
+
+/* ═══════════════════════ SETTINGS ROWS ═══════════════════════ */
+.settings-section-label {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-note {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.65;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-radius: var(--r);
+  border-left: 3px solid var(--accent-lo);
+}
+
+/* ═══════════════════════ SUMMARY MODAL TABS ═══════════════════════ */
+.tab-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tab-btn {
+  padding: 6px 13px;
+  border-radius: var(--r);
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text2);
+  font-family: var(--f-body);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--ease);
+}
+.tab-btn:hover { color: var(--text); border-color: var(--text3); }
+.tab-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+
+/* ═══════════════════════ RESPONSIVE ═══════════════════════ */
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .cat-grid { grid-template-columns: 1fr; }
+  .search-wrap { min-width: 120px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="logo">思维库</div>
+  <div class="logo-divider"></div>
+  <div class="logo-sub">Mind Archive</div>
+  <div class="header-spacer"></div>
+  <div class="sync-indicator">
+    <span id="syncLabel">未连接</span>
+    <span class="sync-dot" id="syncDot"></span>
+  </div>
+  <button class="btn btn-ghost btn-sm" onclick="openSummary()">✦ AI 总结</button>
+  <button class="btn btn-primary btn-sm" onclick="openAdd()">+ 记录想法</button>
+  <button class="btn btn-icon btn-ghost" onclick="openSettings()" title="设置 (⌘,)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</header>
+
+<!-- ═══ APP BODY ═══ -->
+<div class="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-section-label">分类</div>
+      <div class="nav-item active" onclick="setFilter('all')" id="nav-all">
+        <span class="nav-icon">◈</span>
+        <span class="nav-label">全部想法</span>
+        <span class="nav-count" id="cnt-all">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('flash')" id="nav-flash">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label">突然想到的话</span>
+        <span class="nav-count" id="cnt-flash">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('moment')" id="nav-moment">
+        <span class="nav-icon">✦</span>
+        <span class="nav-label">触动时刻</span>
+        <span class="nav-count" id="cnt-moment">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('view')" id="nav-view">
+        <span class="nav-icon">◉</span>
+        <span class="nav-label">完整观点</span>
+        <span class="nav-count" id="cnt-view">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('draft')" id="nav-draft">
+        <span class="nav-icon">◎</span>
+        <span class="nav-label">可输出成稿</span>
+        <span class="nav-count" id="cnt-draft">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('others')" id="nav-others">
+        <span class="nav-icon">❝</span>
+        <span class="nav-label">他人观点</span>
+        <span class="nav-count" id="cnt-others">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('reaction')" id="nav-reaction">
+        <span class="nav-icon">▶</span>
+        <span class="nav-label">内容 Reaction</span>
+        <span class="nav-count" id="cnt-reaction">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('record')" id="nav-record">
+        <span class="nav-icon">□</span>
+        <span class="nav-label">视频/图文 记录</span>
+        <span class="nav-count" id="cnt-record">0</span>
+      </div>
+      <hr class="sidebar-divider" />
+      <div class="sidebar-section-label">统计</div>
+      <div style="padding:4px 8px 8px;font-size:12px;color:var(--text3);font-family:var(--f-mono);line-height:2">
+        <div>本周 <span id="statWeek" style="color:var(--text2)">0</span> 条</div>
+        <div>本月 <span id="statMonth" style="color:var(--text2)">0</span> 条</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="main-toolbar">
+      <div class="main-title-wrap">
+        <div class="main-title" id="mainTitle">全部想法</div>
+        <div class="main-meta" id="mainMeta">共 0 条记录</div>
+      </div>
+      <div class="search-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" id="searchInput" placeholder="搜索..." oninput="renderList()" />
+      </div>
+    </div>
+
+    <div class="entries-scroll">
+      <div class="entries-list" id="entriesList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MODALS ═══════════════════════ -->
+
+<!-- ADD / EDIT modal -->
+<div class="overlay" id="addOverlay" onclick="overlayClick(event,'addOverlay')">
+  <div class="modal modal-md">
+    <div class="modal-head">
+      <div class="modal-title" id="addTitle">记录新想法</div>
+      <button class="close-btn" onclick="closeModal('addOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <div class="label">分类</div>
+        <div class="cat-grid" id="catGrid">
+          <div class="cat-pick" data-cat="flash"    onclick="pickCat('flash')">
+            <span class="cat-pick-icon">⚡</span><span>突然想到的一句话</span>
+          </div>
+          <div class="cat-pick" data-cat="moment"   onclick="pickCat('moment')">
+            <span class="cat-pick-icon">✦</span><span>触动时刻或回忆</span>
+          </div>
+          <div class="cat-pick" data-cat="view"     onclick="pickCat('view')">
+            <span class="cat-pick-icon">◉</span><span>完整观点</span>
+          </div>
+          <div class="cat-pick" data-cat="draft"    onclick="pickCat('draft')">
+            <span class="cat-pick-icon">◎</span><span>可输出的成稿</span>
+          </div>
+          <div class="cat-pick" data-cat="others"   onclick="pickCat('others')">
+            <span class="cat-pick-icon">❝</span><span>对他人观点的记录</span>
+          </div>
+          <div class="cat-pick" data-cat="reaction" onclick="pickCat('reaction')">
+            <span class="cat-pick-icon">▶</span><span>内容 Reaction</span>
+          </div>
+          <div class="cat-pick" data-cat="record" onclick="pickCat('record')">
+            <span class="cat-pick-icon">□</span><span>视频/图文 记录</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reaction-only fields -->
+      <div id="rxFields" style="display:none">
+        <div class="fg">
+          <label class="label">内容链接</label>
+          <input class="input" id="fUrl" type="url" placeholder="https://..." />
+        </div>
+        <div class="fg">
+          <label class="label">视频 / 图文标题</label>
+          <input class="input" id="fLinkTitle" placeholder="内容标题..." />
+        </div>
+      </div>
+
+      <div class="fg">
+        <label class="label" id="contentLabel">内容</label>
+        <textarea class="textarea" id="fContent" rows="6" placeholder="记录你的想法..."></textarea>
+      </div>
+
+      <div class="fg">
+        <label class="label">备注</label>
+        <textarea class="textarea" id="fNotes" rows="2" placeholder="补充说明、来源、背景..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('addOverlay')">取消</button>
+      <button class="btn btn-primary" onclick="saveEntry()">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL modal -->
+<div class="overlay" id="detailOverlay" onclick="overlayClick(event,'detailOverlay')">
+  <div class="modal modal-md">
+    <div class="modal-head">
+      <span class="cat-chip" id="detailChip"></span>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost btn-sm" onclick="editCurrent()">编辑</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCurrent()">删除</button>
+      <button class="close-btn" onclick="closeModal('detailOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-body" id="detailBody"></div>
+      <div class="detail-notes" id="detailNotes" style="display:none"></div>
+      <div class="detail-link-block" id="detailLink" style="display:none">
+        <span class="link-icon">🔗</span>
+        <div>
+          <div class="link-title" id="detailLinkTitle"></div>
+          <div class="link-url"><a id="detailLinkUrl" href="#" target="_blank" rel="noopener"></a></div>
+        </div>
+      </div>
+
+      <!-- AI panel -->
+      <div class="ai-panel">
+        <div class="ai-panel-label">AI 功能</div>
+        <div class="ai-btns">
+          <button class="btn btn-ghost btn-sm" onclick="aiDo('summarize')">✦ 整理提炼</button>
+          <button class="btn btn-ghost btn-sm" onclick="aiDo('extend')">↗ 延伸观点</button>
+          <button class="btn btn-ghost btn-sm" onclick="aiDo('similar')">◈ 相似观点推荐</button>
+        </div>
+        <div class="ai-out" id="aiOut"></div>
+      </div>
+
+      <div class="detail-ts" id="detailTs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY modal -->
+<div class="overlay" id="summaryOverlay" onclick="overlayClick(event,'summaryOverlay')">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title">✦ AI 总结与分析</div>
+      <button class="close-btn" onclick="closeModal('summaryOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="summaryTab(this,'all')">全部想法总结</button>
+        <button class="tab-btn" onclick="summaryTab(this,'current')">当前筛选总结</button>
+        <button class="tab-btn" onclick="summaryTab(this,'themes')">主题分析</button>
+        <button class="tab-btn" onclick="summaryTab(this,'patterns')">思维模式</button>
+      </div>
+      <div class="ai-out visible" id="summaryOut" style="min-height:120px">
+        点击上方按钮开始 AI 分析...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS modal -->
+<div class="overlay" id="settingsOverlay" onclick="overlayClick(event,'settingsOverlay')">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div class="modal-title">设置</div>
+      <button class="close-btn" onclick="closeModal('settingsOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-note">
+        数据存储在你的 GitHub 私有仓库，API 密钥仅保存在本地浏览器中，不会上传。
+      </div>
+
+      <div class="settings-section-label">GitHub 数据仓库</div>
+      <div class="fg">
+        <label class="label">Personal Access Token</label>
+        <input class="input" id="sToken" type="password" placeholder="ghp_..." />
+        <div class="input-hint">需要 <code>repo</code> 权限。<a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noopener">创建 Token →</a></div>
+      </div>
+      <div class="fg">
+        <label class="label">GitHub 用户名</label>
+        <input class="input" id="sUser" placeholder="your-username" />
+      </div>
+      <div class="fg">
+        <label class="label">私有数据仓库名</label>
+        <input class="input" id="sRepo" placeholder="my-thoughts-data" />
+        <div class="input-hint">数据将写入仓库根目录的 <code>thoughts.json</code></div>
+      </div>
+
+      <div class="settings-section-label" style="margin-top:20px">AI 功能</div>
+      <div class="fg">
+        <label class="label">Anthropic API Key</label>
+        <input class="input" id="sKey" type="password" placeholder="sk-ant-..." />
+        <div class="input-hint">仅在本地使用，不会存入仓库。</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="testGitHub()">测试连接</button>
+      <button class="btn btn-ghost" onclick="closeModal('settingsOverlay')">取消</button>
+      <button class="btn btn-primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   CONSTANTS & CONFIG
+══════════════════════════════════════════════ */
+const CATS = {
+  flash:    { label: '一句话',    icon: '⚡', cls: 'cc-flash'   },
+  moment:   { label: '触动时刻', icon: '✦', cls: 'cc-moment'  },
+  view:     { label: '完整观点', icon: '◉', cls: 'cc-view'    },
+  draft:    { label: '成稿',      icon: '◎', cls: 'cc-draft'   },
+  others:   { label: '他人观点', icon: '❝', cls: 'cc-others'  },
+  reaction: { label: 'Reaction', icon: '▶', cls: 'cc-reaction'},
+  record:   { label: '内容记录', icon: '□', cls: 'cc-record'  },
+};
+const CAT_FULL = {
+  all:      '全部想法',
+  flash:    '突然想到的一句话',
+  moment:   '触动时刻或回忆',
+  view:     '完整观点',
+  draft:    '可输出的成稿',
+  others:   '对他人观点的记录',
+  reaction: '内容 Reaction',
+  record:   '视频/图文 记录',
+};
+const PLACEHOLDERS = {
+  flash:    '那一瞬间你想到了什么？',
+  moment:   '描述那个触动你的时刻或回忆...',
+  view:     '写下你的完整观点...',
+  draft:    '写下可以输出的内容...',
+  others:   '记录他人的观点和说法...',
+  reaction: '写下你对这个内容的 Reaction...',
+  record:   '记录和总结这个视频或图文的内容...',
+};
+
+const cfg = {
+  get token()  { return localStorage.getItem('ma_token')  || ''; },
+  get user()   { return localStorage.getItem('ma_user')   || ''; },
+  get repo()   { return localStorage.getItem('ma_repo')   || ''; },
+  get apiKey() { return localStorage.getItem('ma_apikey') || ''; },
+};
+
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let entries    = [];
+let ghSHA      = null;   // SHA of thoughts.json for GitHub updates
+let filter     = 'all';
+let editId     = null;
+let selCat     = '';
+let activEntry = null;
+
+/* ══════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════ */
+async function boot() {
+  loadLocal();
+  renderList();
+  updateCounts();
+  if (cfg.token && cfg.user && cfg.repo) {
+    await ghPull();
+    renderList();
+    updateCounts();
+  }
+}
+
+/* ══════════════════════════════════════════════
+   LOCAL STORAGE FALLBACK
+══════════════════════════════════════════════ */
+function loadLocal() {
+  try {
+    const d = JSON.parse(localStorage.getItem('ma_local') || '{}');
+    entries = d.entries || [];
+  } catch(e) {}
+}
+function saveLocal() {
+  localStorage.setItem('ma_local', JSON.stringify({ entries }));
+}
+
+/* ══════════════════════════════════════════════
+   GITHUB SYNC
+══════════════════════════════════════════════ */
+function setSyncUI(state) {
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'busy' ? 'busy' : state === 'fail' ? 'fail' : '');
+  const map = { ok: '已同步', busy: '同步中', fail: '同步失败', '': '未连接' };
+  label.textContent = map[state] || '未连接';
+}
+
+async function ghPull() {
+  setSyncUI('busy');
+  try {
+    const r = await ghReq('GET', 'thoughts.json');
+    if (r.status === 404) { setSyncUI('ok'); return; }
+    if (!r.ok) throw new Error('fetch failed ' + r.status);
+    const j = await r.json();
+    ghSHA = j.sha;
+    const parsed = JSON.parse(decodeB64(j.content));
+    entries = parsed.entries || [];
+    saveLocal();
+    setSyncUI('ok');
+  } catch(e) {
+    setSyncUI('fail');
+    toast('GitHub 同步失败: ' + e.message, 'err');
+  }
+}
+
+async function ghPush() {
+  if (!cfg.token || !cfg.user || !cfg.repo) { saveLocal(); return; }
+  setSyncUI('busy');
+  try {
+    const content = encodeB64(JSON.stringify({ entries }, null, 2));
+    const body = {
+      message: 'update thoughts ' + new Date().toISOString().slice(0,16),
+      content,
+      ...(ghSHA ? { sha: ghSHA } : {}),
+    };
+    const r = await ghReq('PUT', 'thoughts.json', body);
+    if (!r.ok) {
+      const e = await r.json();
+      throw new Error(e.message || 'push failed');
+    }
+    const j = await r.json();
+    ghSHA = j.content.sha;
+    saveLocal();
+    setSyncUI('ok');
+    toast('已同步到 GitHub', 'ok');
+  } catch(e) {
+    setSyncUI('fail');
+    toast('同步失败: ' + e.message, 'err');
+  }
+}
+
+function ghReq(method, path, body) {
+  const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${path}`;
+  return fetch(url, {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + cfg.token,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+}
+
+/* ══════════════════════════════════════════════
+   ENTRIES CRUD
+══════════════════════════════════════════════ */
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+async function saveEntry() {
+  const content = document.getElementById('fContent').value.trim();
+  if (!selCat)    { toast('请选择分类', 'err'); return; }
+  if (!content)   { toast('请输入内容', 'err'); return; }
+
+  const now = new Date().toISOString();
+  const base = editId ? entries.find(e => e.id === editId) : null;
+
+  const entry = {
+    id:        editId || uid(),
+    category:  selCat,
+    content,
+    notes:     document.getElementById('fNotes').value.trim(),
+    url:       (selCat === 'reaction' || selCat === 'record') ? document.getElementById('fUrl').value.trim() : '',
+    linkTitle: (selCat === 'reaction' || selCat === 'record') ? document.getElementById('fLinkTitle').value.trim() : '',
+    createdAt: base ? base.createdAt : now,
+    updatedAt: now,
+  };
+
+  if (editId) {
+    const idx = entries.findIndex(e => e.id === editId);
+    if (idx > -1) entries[idx] = entry;
+  } else {
+    entries.unshift(entry);
+  }
+
+  editId = null;
+  closeModal('addOverlay');
+  renderList();
+  updateCounts();
+  await ghPush();
+}
+
+async function deleteCurrent() {
+  if (!activEntry || !confirm('确定删除这条记录？')) return;
+  entries = entries.filter(e => e.id !== activEntry.id);
+  closeModal('detailOverlay');
+  activEntry = null;
+  renderList();
+  updateCounts();
+  await ghPush();
+}
+
+function editCurrent() {
+  if (!activEntry) return;
+  closeModal('detailOverlay');
+  openAdd(activEntry);
+}
+
+/* ══════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════ */
+function renderList() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const list = document.getElementById('entriesList');
+
+  const filtered = entries.filter(e => {
+    const catOk = filter === 'all' || e.category === filter;
+    const qOk   = !q || e.content.toLowerCase().includes(q)
+                     || (e.notes     && e.notes.toLowerCase().includes(q))
+                     || (e.linkTitle && e.linkTitle.toLowerCase().includes(q));
+    return catOk && qOk;
+  });
+
+  document.getElementById('mainTitle').textContent = CAT_FULL[filter];
+  document.getElementById('mainMeta').textContent  = `共 ${filtered.length} 条记录`;
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty">
+      <div class="empty-glyph">◈</div>
+      <div class="empty-title">${q ? '没有匹配的记录' : '这里还是空的'}</div>
+      <div class="empty-desc">${q ? '换一个关键词试试？' : '点击右上角「记录想法」开始记录，<br>或前往设置连接你的 GitHub 数据仓库。'}</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(e => {
+    const cat  = CATS[e.category] || {};
+    const date = fmtDate(e.createdAt);
+    const noteH = e.notes    ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
+    const linkH = e.url      ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
+    return `<div class="entry-card" onclick="openDetail('${e.id}')">
+      <div class="entry-header">
+        <span class="cat-chip ${cat.cls}">${cat.icon} ${cat.label}</span>
+        <span class="entry-date">${date}</span>
+      </div>
+      <div class="entry-body">${esc(e.content)}</div>
+      ${noteH}${linkH}
+    </div>`;
+  }).join('');
+}
+
+function updateCounts() {
+  const all = entries.length;
+  document.getElementById('cnt-all').textContent = all;
+  Object.keys(CATS).forEach(c => {
+    document.getElementById('cnt-' + c).textContent = entries.filter(e => e.category === c).length;
+  });
+
+  const now   = new Date();
+  const wkAgo = new Date(now - 7*864e5);
+  const moAgo = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById('statWeek').textContent  = entries.filter(e => new Date(e.createdAt) > wkAgo).length;
+  document.getElementById('statMonth').textContent = entries.filter(e => new Date(e.createdAt) > moAgo).length;
+}
+
+/* ══════════════════════════════════════════════
+   FILTER
+══════════════════════════════════════════════ */
+function setFilter(cat) {
+  filter = cat;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-' + cat).classList.add('active');
+  renderList();
+}
+
+/* ══════════════════════════════════════════════
+   MODAL HELPERS
+══════════════════════════════════════════════ */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function overlayClick(e, id) { if (e.target.id === id) closeModal(id); }
+
+/* ══════════════════════════════════════════════
+   ADD MODAL
+══════════════════════════════════════════════ */
+function openAdd(entry = null) {
+  editId  = entry ? entry.id : null;
+  selCat  = entry ? entry.category : '';
+
+  document.getElementById('addTitle').textContent     = entry ? '编辑记录' : '记录新想法';
+  document.getElementById('fContent').value           = entry ? entry.content   : '';
+  document.getElementById('fNotes').value             = entry ? entry.notes     : '';
+  document.getElementById('fUrl').value               = entry ? (entry.url || '') : '';
+  document.getElementById('fLinkTitle').value         = entry ? (entry.linkTitle || '') : '';
+
+  document.querySelectorAll('.cat-pick').forEach(el => {
+    el.classList.toggle('on', el.dataset.cat === selCat);
+  });
+  document.getElementById('rxFields').style.display   = (selCat === 'reaction' || selCat === 'record') ? 'block' : 'none';
+  document.getElementById('fContent').placeholder     = PLACEHOLDERS[selCat] || '记录你的想法...';
+
+  openModal('addOverlay');
+  setTimeout(() => document.getElementById('fContent').focus(), 50);
+}
+
+function pickCat(cat) {
+  selCat = cat;
+  document.querySelectorAll('.cat-pick').forEach(el => el.classList.toggle('on', el.dataset.cat === cat));
+  document.getElementById('rxFields').style.display = (cat === 'reaction' || cat === 'record') ? 'block' : 'none';
+  document.getElementById('fContent').placeholder   = PLACEHOLDERS[cat];
+}
+
+/* ══════════════════════════════════════════════
+   DETAIL MODAL
+══════════════════════════════════════════════ */
+function openDetail(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  activEntry = e;
+
+  const cat = CATS[e.category] || {};
+  const chip = document.getElementById('detailChip');
+  chip.textContent = `${cat.icon} ${CAT_FULL[e.category]}`;
+  chip.className   = `cat-chip ${cat.cls}`;
+
+  document.getElementById('detailBody').textContent = e.content;
+
+  const notesEl = document.getElementById('detailNotes');
+  notesEl.style.display = e.notes ? 'block' : 'none';
+  notesEl.textContent   = e.notes;
+
+  const linkEl = document.getElementById('detailLink');
+  linkEl.style.display  = e.url ? 'flex' : 'none';
+  if (e.url) {
+    document.getElementById('detailLinkTitle').textContent = e.linkTitle || '';
+    const urlEl = document.getElementById('detailLinkUrl');
+    urlEl.href        = e.url;
+    urlEl.textContent = e.url;
+  }
+
+  document.getElementById('detailTs').textContent =
+    '记录于 ' + new Date(e.createdAt).toLocaleString('zh-CN');
+
+  const aiOut = document.getElementById('aiOut');
+  aiOut.classList.remove('visible');
+  aiOut.innerHTML = '';
+
+  openModal('detailOverlay');
+}
+
+/* ══════════════════════════════════════════════
+   SUMMARY MODAL
+══════════════════════════════════════════════ */
+function openSummary() { openModal('summaryOverlay'); }
+
+function summaryTab(btn, mode) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const src = mode === 'current'
+    ? entries.filter(e => filter === 'all' || e.category === filter)
+    : entries;
+  if (!src.length) {
+    document.getElementById('summaryOut').textContent = '没有可分析的记录。';
+    return;
+  }
+  const prompts = {
+    all:      `以下是记录的所有想法，请做一个整体总结，帮助理解思维全貌：\n\n${formatForAI(src)}\n\n请提炼：\n1. 3-5个核心关注主题\n2. 想法之间的内在联系\n3. 一句话描述这个人的思维特质`,
+    current:  `以下是当前筛选出的想法记录，请做精炼总结：\n\n${formatForAI(src)}\n\n请提炼：\n1. 核心观点汇总\n2. 共同的思维线索\n3. 值得进一步发展的方向`,
+    themes:   `以下是一系列想法，请做主题分析：\n\n${formatForAI(src)}\n\n请识别：\n1. 主要主题（按重要性排序）\n2. 每个主题的代表性想法\n3. 主题之间的关联`,
+    patterns: `以下是一系列想法，请分析其中体现的思维模式：\n\n${formatForAI(src)}\n\n请分析：\n1. 主要的思维习惯和倾向\n2. 常用的思考框架或视角\n3. 思维的盲点或可以拓展的方向`,
+  };
+  callAI(prompts[mode], document.getElementById('summaryOut'));
+}
+
+/* ══════════════════════════════════════════════
+   AI FUNCTIONS
+══════════════════════════════════════════════ */
+function aiDo(mode) {
+  if (!activEntry) return;
+  const e   = activEntry;
+  const out = document.getElementById('aiOut');
+  const prompts = {
+    summarize: `请对以下想法进行整理和提炼，帮助更清晰地理解它的核心，请用简洁的中文表达：
+
+分类：${CAT_FULL[e.category]}
+内容：${e.content}
+${e.notes ? `备注：${e.notes}` : ''}
+
+请从以下角度整理：
+1. 核心观点（1-2句话）
+2. 关键词（3-5个）
+3. 值得深入思考的问题`,
+
+    extend: `基于以下想法，帮我延伸和深化这个观点，探索更多可能性：
+
+分类：${CAT_FULL[e.category]}
+内容：${e.content}
+${e.notes ? `备注：${e.notes}` : ''}
+
+请从以下方向延伸：
+1. 这个想法可以往哪些方向深入？
+2. 有哪些值得考虑的反驳或不同视角？
+3. 在现实中有哪些有趣的例证或应用？`,
+
+    similar: `基于以下想法，推荐相关的外部观点、哲学概念或思想家的论述：
+
+内容：${e.content}
+
+请推荐：
+1. 持有相似观点的哲学家/思想家及其核心论述（2-3位）
+2. 相关的哲学概念或理论框架
+3. 值得延伸阅读的方向或书目
+请用中文回答，保持简洁有深度。`,
+  };
+  callAI(prompts[mode], out);
+}
+
+async function callAI(prompt, outEl) {
+  if (!cfg.apiKey) {
+    outEl.textContent = '请先在设置中填写 Anthropic API Key。';
+    outEl.classList.add('visible');
+    return;
+  }
+  outEl.classList.add('visible');
+  outEl.innerHTML = `<div class="ai-loading"><div class="dots"><span></span><span></span><span></span></div><span>AI 思考中...</span></div>`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cfg.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    outEl.textContent = text;
+  } catch(e) {
+    outEl.textContent = '❌ ' + e.message;
+  }
+}
+
+function formatForAI(arr) {
+  return arr.slice(0, 60).map(e =>
+    `[${CAT_FULL[e.category]}] ${e.content.slice(0,300)}`
+  ).join('\n\n');
+}
+
+/* ══════════════════════════════════════════════
+   SETTINGS
+══════════════════════════════════════════════ */
+function openSettings() {
+  document.getElementById('sToken').value = cfg.token;
+  document.getElementById('sUser').value  = cfg.user;
+  document.getElementById('sRepo').value  = cfg.repo;
+  document.getElementById('sKey').value   = cfg.apiKey;
+  openModal('settingsOverlay');
+}
+
+function saveSettings() {
+  localStorage.setItem('ma_token',  document.getElementById('sToken').value.trim());
+  localStorage.setItem('ma_user',   document.getElementById('sUser').value.trim());
+  localStorage.setItem('ma_repo',   document.getElementById('sRepo').value.trim());
+  localStorage.setItem('ma_apikey', document.getElementById('sKey').value.trim());
+  closeModal('settingsOverlay');
+  toast('设置已保存', 'ok');
+  if (cfg.token && cfg.user && cfg.repo) {
+    ghPull().then(() => { renderList(); updateCounts(); });
+  }
+}
+
+async function testGitHub() {
+  const t = document.getElementById('sToken').value.trim();
+  const u = document.getElementById('sUser').value.trim();
+  const r = document.getElementById('sRepo').value.trim();
+  if (!t || !u || !r) { toast('请填写完整的 GitHub 信息', 'err'); return; }
+  try {
+    const res = await fetch(`https://api.github.com/repos/${u}/${r}`, {
+      headers: { 'Authorization': 'Bearer ' + t, 'Accept': 'application/vnd.github+json' },
+    });
+    if (res.ok) toast('GitHub 连接成功 ✓', 'ok');
+    else {
+      const e = await res.json();
+      toast('连接失败: ' + e.message, 'err');
+    }
+  } catch(e) { toast('连接失败: ' + e.message, 'err'); }
+}
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+let toastTimer;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ══════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════ */
+function esc(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+function encodeB64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function decodeB64(str) {
+  return decodeURIComponent(escape(atob(str.replace(/\n/g, ''))));
+}
+
+/* ══════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+══════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.overlay.open').forEach(el => el.classList.remove('open'));
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+    e.preventDefault();
+    openAdd();
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+    e.preventDefault();
+    openSettings();
+  }
+});
+
+/* ══════════════════════════════════════════════
+   START
+══════════════════════════════════════════════ */
+boot();
+</script>
+</body>
+</html>

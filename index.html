@@ -667,6 +667,14 @@ header {
   display: flex; align-items: center; justify-content: center; z-index: 2;
 }
 .detail-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.img-loading-ph {
+  min-width: 80px; min-height: 60px;
+  background: var(--surface2);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--text3);
+}
 .detail-gallery-img {
   max-width: 100%; max-height: 280px; object-fit: contain;
   border-radius: var(--r); border: 1px solid var(--border);
@@ -1108,6 +1116,7 @@ let filter      = 'all';
 let editId      = null;
 let selCat      = '';
 let activEntry  = null;
+let detailImgSrcs = []; // resolved image srcs for current detail view
 
 /* ══════════════════════════════════════════════
    BOOT
@@ -1465,26 +1474,26 @@ function openDetail(id) {
   // images — load async since private repos need API auth
   const gallery = document.getElementById('detailGallery');
   const imgs = e.images || [];
+  detailImgSrcs = []; // reset resolved srcs for lightbox
   if (imgs.length) {
     gallery.style.display = '';
     gallery.innerHTML = imgs.map((img, i) =>
-      `<div id="igw${i}" style="min-width:80px;min-height:60px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3)">加载中...</div>`
+      `<div id="igw${i}" class="img-loading-ph">加载中...</div>`
     ).join('');
     imgs.forEach((img, i) => {
-      const wrap = document.getElementById('igw' + i);
-      if (!wrap) return;
-      if (!img.path) {
-        // Legacy base64 format
-        const src = img.src || '';
-        wrap.outerHTML = `<img class="detail-gallery-img" src="${src}" onclick="openLightbox('${src}')" />`;
-        return;
-      }
-      resolveImgSrc(img.path).then(src => {
+      const srcPromise = (!img.path && img.src)
+        ? Promise.resolve(img.src)         // legacy base64
+        : resolveImgSrc(img.path);         // path-based (private repo via API)
+      srcPromise.then(src => {
+        detailImgSrcs[i] = src;
         const el = document.getElementById('igw' + i);
         if (!el) return;
         if (src) {
-          const escaped = src.startsWith('data:') ? src : esc(src);
-          el.outerHTML = `<img class="detail-gallery-img" src="${src}" onclick="openLightbox('${escaped}')" />`;
+          const img = document.createElement('img');
+          img.className = 'detail-gallery-img';
+          img.src = src;
+          img.onclick = () => openLightbox(i);
+          el.replaceWith(img);
         } else {
           el.textContent = '图片加载失败';
         }
@@ -1914,7 +1923,9 @@ async function uploadPendingImages(saveBtn) {
 }
 
 /* lightbox */
-function openLightbox(src) {
+function openLightbox(i) {
+  const src = detailImgSrcs[i];
+  if (!src) return;
   document.getElementById('lightboxImg').src = src;
   document.getElementById('lightbox').classList.add('open');
 }

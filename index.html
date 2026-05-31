@@ -1470,7 +1470,10 @@ function setFilter(cat) {
    MODAL HELPERS
 ══════════════════════════════════════════════ */
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'detailOverlay') revokeDetailBlobs();
+}
 function overlayClick(e, id) { if (e.target.id === id) closeModal(id); }
 
 /* ══════════════════════════════════════════════
@@ -1973,24 +1976,58 @@ function imgRawURL(path) {
   return `https://raw.githubusercontent.com/${cfg.user}/${cfg.repo}/main/${path}`;
 }
 
-// For private repos, raw URLs need auth which <img> tags can't send.
-// Fetch via API and return a data: URL (works for images up to ~1MB).
+// Track blob URLs created for detail view so we can revoke them on close
+let detailBlobURLs = [];
+
+function revokeDetailBlobs() {
+  detailBlobURLs.forEach(u => URL.revokeObjectURL(u));
+  detailBlobURLs = [];
+}
+
 async function resolveImgSrc(path) {
   if (!cfg.token || !cfg.user || !cfg.repo) return imgRawURL(path);
   try {
     const r = await ghReq('GET', path);
     if (!r.ok) return '';
     const j = await r.json();
-    if (j.content) {
-      const b64 = j.content.replace(/\n/g, '');
-      const ext = path.split('.').pop().toLowerCase();
-      const mime = { png:'image/png', gif:'image/gif', webp:'image/webp', jpg:'image/jpeg', jpeg:'image/jpeg' }[ext] || 'image/jpeg';
-      return `data:${mime};base64,${b64}`;
+    const ext  = path.split('.').pop().toLowerCase();
+    const mime = { png:'image/png', gif:'image/gif', webp:'image/webp',
+                   jpg:'image/jpeg', jpeg:'image/jpeg' }[ext] || 'image/jpeg';
+
+    let b64 = null;
+
+    if (j.content && j.encoding === 'base64') {
+      // Under ~1MB — content returned directly
+      b64 = j.content.replace(/\n/g, '');
+    } else if (j.encoding === 'none' && j.sha) {
+      // Over 1MB — fetch via Git blob API (supports up to 100MB, proper auth)
+      const br = await fetch(
+        `https://api.github.com/repos/${cfg.user}/${cfg.repo}/git/blobs/${j.sha}`,
+        { headers: { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json' } }
+      );
+      if (br.ok) {
+        const bj = await br.json();
+        b64 = (bj.content || '').replace(/\n/g, '');
+      }
     }
-    // file >1MB: download_url token is already in URL, no auth header needed
+
+    if (b64) {
+      // Convert to Blob URL — more efficient than data: URL for large images
+      const bin   = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blobUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      detailBlobURLs.push(blobUrl);
+      return blobUrl;
+    }
+
+    // Last resort: download_url (may have temp token for private repos)
     if (j.download_url) return j.download_url;
     return '';
-  } catch(e) { return ''; }
+  } catch(e) {
+    console.error('resolveImgSrc:', path, e);
+    return '';
+  }
 }
 
 function fileToDataURL(file) {

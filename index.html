@@ -690,7 +690,74 @@ header {
 .lightbox.open { opacity: 1; pointer-events: all; }
 .lightbox img { max-width: 100%; max-height: 92vh; object-fit: contain; border-radius: var(--r2); }
 
-/* ═══════════════════════ SETTINGS ROWS ═══════════════════════ */
+/* ═══════════════════════ FILE ATTACHMENTS ═══════════════════════ */
+.file-upload-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--r);
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--ease);
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.file-upload-zone:hover, .file-upload-zone.drag-over {
+  border-color: var(--accent-lo);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.file-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-size: 12px;
+}
+.file-item-icon { font-size: 16px; flex-shrink: 0; }
+.file-item-name { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-item-size { font-family: var(--f-mono); font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.file-item-badge {
+  font-family: var(--f-mono); font-size: 9px;
+  padding: 1px 5px; border-radius: 2px; flex-shrink: 0;
+}
+.file-item-badge.uploaded { background: rgba(58,138,74,.12); color: var(--green); }
+.file-item-badge.pending  { background: rgba(200,149,58,.12); color: var(--accent); }
+.file-item-del {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text3); cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all var(--ease);
+}
+.file-item-del:hover { background: var(--red); border-color: var(--red); color: #fff; }
+
+.detail-attachments { margin-top: 14px; }
+.detail-attach-label {
+  font-family: var(--f-mono); font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+.attach-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-size: 13px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all var(--ease);
+}
+.attach-item:hover { border-color: var(--accent-lo); background: var(--surface3); }
+.attach-item:last-child { margin-bottom: 0; }
+.attach-icon { font-size: 18px; flex-shrink: 0; }
+.attach-name { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attach-size { font-family: var(--f-mono); font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.attach-dl { font-size: 11px; color: var(--accent); flex-shrink: 0; font-family: var(--f-mono); }
 .settings-section-label {
   font-family: var(--f-mono);
   font-size: 10px;
@@ -937,6 +1004,18 @@ header {
         <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none" onchange="imgFileChange(event)" />
         <div class="img-preview-strip" id="imgPreviewStrip"></div>
       </div>
+
+      <div class="fg">
+        <div class="label">附件 <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em">可选</span></div>
+        <div class="file-upload-zone" id="fileDropZone"
+          onclick="document.getElementById('fileInput').click()"
+          ondragover="fileDragOver(event)" ondragleave="fileDragLeave(event)" ondrop="fileDrop(event)">
+          📎 点击上传 · 拖拽文件<br>
+          <span style="font-size:10px;opacity:.7">支持 PDF · DOCX，单文件最大 25MB</span>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple style="display:none" onchange="fileInputChange(event)" />
+        <div class="file-list" id="fileList"></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('addOverlay')">取消</button>
@@ -960,6 +1039,7 @@ header {
       <div class="detail-title" id="detailTitle" style="display:none"></div>
       <div class="detail-body" id="detailBody"></div>
       <div class="detail-gallery" id="detailGallery"></div>
+      <div class="detail-attachments" id="detailAttachments" style="display:none"></div>
       <div class="detail-notes" id="detailNotes" style="display:none"></div>
       <div class="detail-link-block" id="detailLink" style="display:none">
         <span class="link-icon">🔗</span>
@@ -1111,12 +1191,13 @@ const cfg = {
 /* ══════════════════════════════════════════════
    STATE
 ══════════════════════════════════════════════ */
-let entries     = [];
-let filter      = 'all';
-let editId      = null;
-let selCat      = '';
-let activEntry  = null;
-let detailImgSrcs = []; // resolved image srcs for current detail view
+let entries       = [];
+let filter        = 'all';
+let editId        = null;
+let selCat        = '';
+let activEntry    = null;
+let detailImgSrcs = [];
+let pendingFiles  = []; // [{file, name, size, type, path}] staged in add form
 
 /* ══════════════════════════════════════════════
    BOOT
@@ -1251,12 +1332,11 @@ async function saveEntry() {
   if (!content)   { toast('请输入内容', 'err'); return; }
 
   const saveBtn = document.querySelector('#addOverlay .btn-primary');
-  let images;
+  let images, attachments;
   try {
-    images = await uploadPendingImages(saveBtn);
-  } catch(e) {
-    return; // upload failed, error already toasted
-  }
+    images      = await uploadPendingImages(saveBtn);
+    attachments = await uploadPendingFiles(saveBtn);
+  } catch(e) { return; }
 
   const now = new Date().toISOString();
   const base = editId ? entries.find(e => e.id === editId) : null;
@@ -1269,6 +1349,7 @@ async function saveEntry() {
     notes:     document.getElementById('fNotes').value.trim(),
     done:      document.getElementById('fDone').checked,
     images,
+    attachments,
     url:       needsLink(selCat) ? document.getElementById('fUrl').value.trim() : '',
     linkTitle: needsLink(selCat) ? document.getElementById('fLinkTitle').value.trim() : '',
     createdAt: base ? base.createdAt : now,
@@ -1283,7 +1364,8 @@ async function saveEntry() {
   }
 
   editId = null;
-  pendingImgs = [];
+  pendingImgs  = [];
+  pendingFiles = [];
   closeModal('addOverlay');
   renderList();
   updateCounts();
@@ -1405,15 +1487,10 @@ function openAdd(entry = null) {
   document.getElementById('fDone').checked            = entry ? !!entry.done    : false;
   document.getElementById('fUrl').value               = entry ? (entry.url || '') : '';
   document.getElementById('fLinkTitle').value         = entry ? (entry.linkTitle || '') : '';
-  pendingImgs = entry
-    ? (entry.images || []).map(img => ({
-        path:    img.path || null,
-        name:    img.name || '',
-        preview: img.src  || null, // fallback for old base64 entries
-        file:    null,
-      }))
-    : [];
+  pendingImgs  = entry ? (entry.images || []).map(img => ({ path: img.path||null, name: img.name||'', preview: img.src||null, file: null })) : [];
+  pendingFiles = entry ? (entry.attachments || []).map(a => ({ ...a, file: null })) : [];
   renderImgPreview();
+  renderFileList();
 
   document.querySelectorAll('.cat-pick').forEach(el => {
     el.classList.toggle('on', el.dataset.cat === selCat);
@@ -1503,6 +1580,8 @@ function openDetail(id) {
     gallery.innerHTML = '';
     gallery.style.display = 'none';
   }
+
+  renderDetailAttachments(e.attachments || []);
 
   const notesEl = document.getElementById('detailNotes');
   notesEl.style.display = e.notes ? 'block' : 'none';
@@ -1747,6 +1826,135 @@ function decodeB64(str) {
   const bin = atob(str.replace(/\n/g, ''));
   const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
   return new TextDecoder().decode(bytes);
+}
+
+/* ══════════════════════════════════════════════
+   FILE ATTACHMENTS
+══════════════════════════════════════════════ */
+const FILE_ICONS = { pdf: '📄', docx: '📝' };
+const FILE_MIME  = {
+  pdf:  'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
+
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+function fileExt(name) {
+  return name.split('.').pop().toLowerCase();
+}
+
+function addFiles(fileList) {
+  for (const f of fileList) {
+    const ext = fileExt(f.name);
+    if (!['pdf','docx'].includes(ext)) { toast('只支持 PDF 和 DOCX', 'err'); continue; }
+    if (f.size > 25 * 1024 * 1024) { toast(`${f.name} 超过 25MB，已跳过`, 'err'); continue; }
+    if (pendingFiles.find(p => p.name === f.name)) { toast(`${f.name} 已存在`, 'err'); continue; }
+    pendingFiles.push({ file: f, name: f.name, size: f.size, type: ext, path: null });
+  }
+  renderFileList();
+}
+
+function renderFileList() {
+  const el = document.getElementById('fileList');
+  el.innerHTML = pendingFiles.map((f, i) => `
+    <div class="file-item">
+      <span class="file-item-icon">${FILE_ICONS[f.type] || '📎'}</span>
+      <span class="file-item-name" title="${esc(f.name)}">${esc(f.name)}</span>
+      <span class="file-item-size">${fmtSize(f.size)}</span>
+      <span class="file-item-badge ${f.path ? 'uploaded' : 'pending'}">${f.path ? '✓' : '待传'}</span>
+      <button class="file-item-del" onclick="removeFile(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeFile(i) { pendingFiles.splice(i, 1); renderFileList(); }
+
+function fileInputChange(e) { addFiles(Array.from(e.target.files)); e.target.value = ''; }
+function fileDragOver(e)  { e.preventDefault(); document.getElementById('fileDropZone').classList.add('drag-over'); }
+function fileDragLeave()  { document.getElementById('fileDropZone').classList.remove('drag-over'); }
+function fileDrop(e) { e.preventDefault(); fileDragLeave(); addFiles(Array.from(e.dataTransfer.files)); }
+
+async function ghUploadFile(f) {
+  const ext  = fileExt(f.name);
+  const fname = `${Date.now()}_${Math.random().toString(36).slice(2,6)}.${ext}`;
+  const path  = `files/${fname}`;
+  const b64   = await fileToBase64(f);
+  const r = await ghReq('PUT', path, { message: `add file ${fname}`, content: b64 });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.message || 'HTTP ' + r.status);
+  }
+  return path;
+}
+
+async function uploadPendingFiles(saveBtn) {
+  const toUpload = pendingFiles.filter(f => !f.path);
+  if (!toUpload.length || !cfg.token || !cfg.user || !cfg.repo) {
+    return pendingFiles.map(f => ({ path: f.path, name: f.name, size: f.size, type: f.type }));
+  }
+  if (saveBtn) { saveBtn.textContent = '上传文件中...'; saveBtn.disabled = true; }
+  for (let i = 0; i < pendingFiles.length; i++) {
+    const f = pendingFiles[i];
+    if (!f.path) {
+      try {
+        f.path = await ghUploadFile(f.file);
+        renderFileList();
+      } catch(e) {
+        toast('文件上传失败: ' + e.message, 'err');
+        if (saveBtn) { saveBtn.textContent = '保存记录'; saveBtn.disabled = false; }
+        throw e;
+      }
+    }
+  }
+  if (saveBtn) { saveBtn.textContent = '保存记录'; saveBtn.disabled = false; }
+  return pendingFiles.map(f => ({ path: f.path, name: f.name, size: f.size, type: f.type }));
+}
+
+async function downloadAttachment(path, name, type) {
+  toast('下载中...', '');
+  try {
+    const r = await ghReq('GET', path);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+
+    let blob;
+    if (j.encoding === 'none' || !j.content || j.content.replace(/\s/g,'') === '') {
+      if (!j.download_url) throw new Error('无下载链接');
+      const dl = await fetch(j.download_url); // token in URL, no auth header
+      if (!dl.ok) throw new Error('HTTP ' + dl.status);
+      blob = await dl.blob();
+    } else {
+      const b64  = j.content.replace(/\n/g, '');
+      const bin  = atob(b64);
+      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      blob = new Blob([bytes], { type: FILE_MIME[type] || 'application/octet-stream' });
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    toast('下载完成', 'ok');
+  } catch(e) {
+    toast('下载失败: ' + e.message, 'err');
+  }
+}
+
+function renderDetailAttachments(attachments) {
+  const el = document.getElementById('detailAttachments');
+  if (!attachments || !attachments.length) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = `<div class="detail-attach-label">附件</div>` +
+    attachments.map(a => `
+      <div class="attach-item" onclick="downloadAttachment('${esc(a.path)}','${esc(a.name)}','${esc(a.type)}')">
+        <span class="attach-icon">${FILE_ICONS[a.type] || '📎'}</span>
+        <span class="attach-name">${esc(a.name)}</span>
+        <span class="attach-size">${fmtSize(a.size)}</span>
+        <span class="attach-dl">↓ 下载</span>
+      </div>`).join('');
 }
 
 /* ══════════════════════════════════════════════

@@ -690,7 +690,32 @@ header {
 .lightbox.open { opacity: 1; pointer-events: all; }
 .lightbox img { max-width: 100%; max-height: 92vh; object-fit: contain; border-radius: var(--r2); }
 
-/* ═══════════════════════ FILE ATTACHMENTS ═══════════════════════ */
+/* ═══════════════════════ PUBLIC EXPORT ═══════════════════════ */
+.public-badge {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid rgba(74,122,170,.35);
+  color: var(--blue);
+  background: rgba(74,122,170,.07);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.public-toggle {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all var(--ease);
+  user-select: none;
+  flex-shrink: 0;
+}
+.public-toggle.off { color: var(--text3); border-color: var(--border2); background: transparent; }
+.public-toggle.off:hover { color: var(--blue); border-color: rgba(74,122,170,.4); }
+.public-toggle.on  { color: var(--blue); border-color: rgba(74,122,170,.35); background: rgba(74,122,170,.07); }
 .file-upload-zone {
   border: 1.5px dashed var(--border2);
   border-radius: var(--r);
@@ -816,6 +841,7 @@ header {
     <span class="sync-dot" id="syncDot"></span>
   </div>
   <button class="btn btn-ghost btn-sm" onclick="openSummary()">✦ AI 总结</button>
+  <button class="btn btn-ghost btn-sm" onclick="exportPublicJSON()">↗ 导出展示</button>
   <button class="btn btn-primary btn-sm" onclick="openAdd()">+ 记录想法</button>
   <button class="btn btn-icon btn-ghost" onclick="openSettings()" title="设置 (⌘,)">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1030,6 +1056,7 @@ header {
     <div class="modal-head">
       <span class="cat-chip" id="detailChip"></span>
       <span class="status-badge pending" id="detailStatus" onclick="toggleDone()"></span>
+      <span class="public-toggle off" id="detailPublic" onclick="togglePublic()">◎ 公开</span>
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="editCurrent()">编辑</button>
       <button class="btn btn-danger btn-sm" onclick="deleteCurrent()">删除</button>
@@ -1348,6 +1375,7 @@ async function saveEntry() {
     content,
     notes:     document.getElementById('fNotes').value.trim(),
     done:      document.getElementById('fDone').checked,
+    public:    base ? !!base.public : false,
     images,
     attachments,
     url:       needsLink(selCat) ? document.getElementById('fUrl').value.trim() : '',
@@ -1422,6 +1450,7 @@ function renderList() {
     const titleH  = e.title ? `<div class="entry-title">${esc(e.title)}</div>` : '';
     const noteH   = e.notes ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
     const linkH   = e.url   ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
+    const pubH    = e.public ? `<span class="public-badge">◎ 公开</span>` : '';
     const imgs    = e.images || [];
     const imgH    = imgs.length ? `<div class="card-img-strip"><span style="font-size:11px;color:var(--text3);font-family:var(--f-mono)">🖼 ${imgs.length} 张图片</span></div>` : '';
     const statusH = needsLink(e.category)
@@ -1433,6 +1462,7 @@ function renderList() {
       <div class="entry-header">
         <span class="cat-chip ${cat.cls}">${cat.icon} ${cat.label}</span>
         ${statusH}
+        ${pubH}
         <span class="entry-date">${date}</span>
       </div>
       ${titleH}
@@ -1544,8 +1574,8 @@ function openDetail(id) {
     titleEl.style.display = 'none';
   }
 
-  // status badge
   refreshDetailStatus(e);
+  refreshDetailPublic(e);
 
   document.getElementById('detailBody').textContent = e.content;
   document.getElementById('detailBody').style.fontFamily = e.category === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
@@ -1958,6 +1988,69 @@ function renderDetailAttachments(attachments) {
         <span class="attach-size">${fmtSize(a.size)}</span>
         <span class="attach-dl">↓ 下载</span>
       </div>`).join('');
+}
+
+/* ══════════════════════════════════════════════
+   PUBLIC EXPORT
+══════════════════════════════════════════════ */
+function refreshDetailPublic(e) {
+  const el = document.getElementById('detailPublic');
+  el.className = 'public-toggle ' + (e.public ? 'on' : 'off');
+  el.textContent = e.public ? '◎ 公开 ✓' : '◎ 公开';
+}
+
+async function togglePublic() {
+  if (!activEntry) return;
+  activEntry.public = !activEntry.public;
+  activEntry.updatedAt = new Date().toISOString();
+  const idx = entries.findIndex(e => e.id === activEntry.id);
+  if (idx > -1) entries[idx] = activEntry;
+  refreshDetailPublic(activEntry);
+  renderList();
+  await ghPush();
+}
+
+function exportPublicJSON() {
+  const pub = entries.filter(e => e.public);
+  if (!pub.length) { toast('没有标记为「公开」的条目', 'err'); return; }
+
+  // Group by category, preserving sidebar order
+  const catOrder = ['flash','moment','view','draft','others','reaction','record','prompt','ted','human'];
+  const groups = {};
+  for (const e of pub) {
+    if (!groups[e.category]) groups[e.category] = [];
+    groups[e.category].push(e);
+  }
+
+  const sections = catOrder
+    .filter(cat => groups[cat])
+    .map(cat => ({
+      type:  cat,
+      label: CAT_FULL[cat] || cat,
+      items: groups[cat].map(e => ({
+        id:        e.id,
+        name:      e.title || e.content.slice(0, 40) + (e.content.length > 40 ? '…' : ''),
+        summary:   '',
+        category:  CAT_FULL[e.category] || e.category,
+        content:   e.content,
+        tags:      [],
+        updatedAt: e.updatedAt || '',
+      })),
+    }));
+
+  const data = {
+    dbId:        'thoughts',
+    title:       '思维库 · Mind Archive',
+    generatedAt: new Date().toISOString(),
+    sections,
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'thoughts.public.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  toast(`已导出 ${pub.length} 条公开内容`, 'ok');
 }
 
 /* ══════════════════════════════════════════════

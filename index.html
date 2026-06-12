@@ -2045,12 +2045,39 @@ function exportPublicJSON() {
     sections,
   };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  publishPublic('thoughts.public.json', JSON.stringify(data, null, 2), pub.length);
+}
+
+// 发布公开数据：直接写入 GitHub 数据仓库（与主数据同仓库，根目录）；
+// 未配置 GitHub 或发布失败时回退为本地下载
+async function publishPublic(filename, json, count) {
+  const PUBLIC_REPO = 'Database-Public'; // 公开数据专用仓库（public）——网站只从这里读取，碰不到私有库
+  if (cfg.token && cfg.user) {
+    try {
+      const url = `https://api.github.com/repos/${cfg.user}/${PUBLIC_REPO}/contents/${filename}`;
+      const hdrs = { Authorization: 'Bearer ' + cfg.token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' };
+      let sha = null;
+      const getR = await fetch(url, { headers: hdrs });
+      if (getR.ok) sha = (await getR.json()).sha;
+      else if (getR.status !== 404) throw new Error('读取文件失败 HTTP ' + getR.status);
+      const r = await fetch(url, { method: 'PUT', headers: hdrs, body: JSON.stringify({
+        message: `publish ${filename} (${count} entries)`,
+        content: encodeB64(json),
+        ...(sha ? { sha } : {}),
+      }) });
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || 'HTTP ' + r.status); }
+      toast(`已发布 ${count} 条公开内容 → ${filename}`, 'ok');
+      return;
+    } catch (e) {
+      toast('发布失败: ' + e.message + '，已转为本地下载', 'err');
+    }
+  }
+  const blob = new Blob([json], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = 'thoughts.public.json'; a.click();
+  a.href = url; a.download = filename; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
-  toast(`已导出 ${pub.length} 条公开内容`, 'ok');
+  toast(`已导出 ${count} 条公开内容（本地下载）`, 'ok');
 }
 
 /* ══════════════════════════════════════════════

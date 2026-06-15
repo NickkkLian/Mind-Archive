@@ -826,6 +826,12 @@ header {
   .cat-grid { grid-template-columns: 1fr; }
   .search-wrap { min-width: 120px; }
 }
+/* [hub-mobile] 手机端：头部紧凑，隐藏副标题/分隔线/同步文字，保证按钮不被裁切 */
+@media (max-width:640px){
+  header{padding:0 12px;gap:8px}
+  .logo{font-size:16px}
+  .logo-sub,.logo-divider,.sync-indicator{display:none}
+}
 </style>
 </head>
 <body>

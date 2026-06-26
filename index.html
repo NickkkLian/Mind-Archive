@@ -838,18 +838,19 @@ header {
 
 <!-- ═══ HEADER ═══ -->
 <header>
-  <div class="logo">思维库</div>
+  <div class="logo" data-i18n="logo">思维库</div>
   <div class="logo-divider"></div>
   <div class="logo-sub">Mind Archive</div>
   <div class="header-spacer"></div>
   <div class="sync-indicator">
-    <span id="syncLabel">未连接</span>
+    <span id="syncLabel" data-i18n="sync_nc">未连接</span>
     <span class="sync-dot" id="syncDot"></span>
   </div>
-  <button class="btn btn-ghost btn-sm" onclick="openSummary()">✦ AI 总结</button>
-  <button class="btn btn-ghost btn-sm" onclick="exportPublicJSON()">↗ 导出展示</button>
-  <button class="btn btn-primary btn-sm" onclick="openAdd()">+ 记录想法</button>
-  <button class="btn btn-icon btn-ghost" onclick="openSettings()" title="设置 (⌘,)">
+  <button class="btn btn-ghost btn-sm" onclick="openSummary()" data-i18n="btnSummary">✦ AI 总结</button>
+  <button class="btn btn-ghost btn-sm" onclick="exportPublicJSON()" data-i18n="btnExport">↗ 导出展示</button>
+  <button class="btn btn-primary btn-sm" onclick="openAdd()" data-i18n="btnAdd">+ 记录想法</button>
+  <button class="btn btn-ghost btn-sm" id="langBtn" onclick="toggleLang()" title="中 / EN">EN</button>
+  <button class="btn btn-icon btn-ghost" onclick="openSettings()" data-i18n-title="settingsT" title="设置 (⌘,)">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
 </header>
@@ -860,67 +861,67 @@ header {
   <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-inner">
-      <div class="sidebar-section-label">分类</div>
+      <div class="sidebar-section-label" data-i18n="side_cats">分类</div>
       <div class="nav-item active" onclick="setFilter('all')" id="nav-all">
         <span class="nav-icon">◈</span>
-        <span class="nav-label">全部想法</span>
+        <span class="nav-label" data-i18n="nav_all">全部想法</span>
         <span class="nav-count" id="cnt-all">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('flash')" id="nav-flash">
         <span class="nav-icon">⚡</span>
-        <span class="nav-label">突然想到的话</span>
+        <span class="nav-label" data-i18n="nav_flash">突然想到的话</span>
         <span class="nav-count" id="cnt-flash">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('moment')" id="nav-moment">
         <span class="nav-icon">✦</span>
-        <span class="nav-label">触动时刻</span>
+        <span class="nav-label" data-i18n="nav_moment">触动时刻</span>
         <span class="nav-count" id="cnt-moment">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('view')" id="nav-view">
         <span class="nav-icon">◉</span>
-        <span class="nav-label">完整观点</span>
+        <span class="nav-label" data-i18n="nav_view">完整观点</span>
         <span class="nav-count" id="cnt-view">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('draft')" id="nav-draft">
         <span class="nav-icon">◎</span>
-        <span class="nav-label">可输出成稿</span>
+        <span class="nav-label" data-i18n="nav_draft">可输出成稿</span>
         <span class="nav-count" id="cnt-draft">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('others')" id="nav-others">
         <span class="nav-icon">※</span>
-        <span class="nav-label">他人观点</span>
+        <span class="nav-label" data-i18n="nav_others">他人观点</span>
         <span class="nav-count" id="cnt-others">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('reaction')" id="nav-reaction">
         <span class="nav-icon">▶</span>
-        <span class="nav-label">内容 Reaction</span>
+        <span class="nav-label" data-i18n="nav_reaction">内容 Reaction</span>
         <span class="nav-count" id="cnt-reaction">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('record')" id="nav-record">
         <span class="nav-icon">□</span>
-        <span class="nav-label">视频/图文 记录</span>
+        <span class="nav-label" data-i18n="nav_record">视频/图文 记录</span>
         <span class="nav-count" id="cnt-record">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('prompt')" id="nav-prompt">
         <span class="nav-icon">✧</span>
-        <span class="nav-label">Useful AI Prompt</span>
+        <span class="nav-label" data-i18n="nav_prompt">Useful AI Prompt</span>
         <span class="nav-count" id="cnt-prompt">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('ted')" id="nav-ted">
         <span class="nav-icon">◐</span>
-        <span class="nav-label">TED IDEAS</span>
+        <span class="nav-label" data-i18n="nav_ted">TED IDEAS</span>
         <span class="nav-count" id="cnt-ted">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('human')" id="nav-human">
         <span class="nav-icon">◑</span>
-        <span class="nav-label">人类观察</span>
+        <span class="nav-label" data-i18n="nav_human">人类观察</span>
         <span class="nav-count" id="cnt-human">0</span>
       </div>
       <hr class="sidebar-divider" />
-      <div class="sidebar-section-label">统计</div>
+      <div class="sidebar-section-label" data-i18n="side_stats">统计</div>
       <div style="padding:4px 8px 8px;font-size:12px;color:var(--text3);font-family:var(--f-mono);line-height:2">
-        <div>本周 <span id="statWeek" style="color:var(--text2)">0</span> 条</div>
-        <div>本月 <span id="statMonth" style="color:var(--text2)">0</span> 条</div>
+        <div><span data-i18n="stWeekL">本周</span> <span id="statWeek" style="color:var(--text2)">0</span> <span data-i18n="stWeekU">条</span></div>
+        <div><span data-i18n="stMonthL">本月</span> <span id="statMonth" style="color:var(--text2)">0</span> <span data-i18n="stWeekU">条</span></div>
       </div>
     </div>
   </nav>
@@ -934,7 +935,7 @@ header {
       </div>
       <div class="search-wrap">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-input" id="searchInput" placeholder="搜索..." oninput="renderList()" />
+        <input class="search-input" id="searchInput" data-i18n-ph="searchPh" placeholder="搜索..." oninput="renderList()" />
       </div>
     </div>
 
@@ -955,37 +956,37 @@ header {
     </div>
     <div class="modal-body">
       <div class="fg">
-        <div class="label">分类</div>
+        <div class="label" data-i18n="fl_cat">分类</div>
         <div class="cat-grid">
           <div class="cat-pick" data-cat="flash"    onclick="pickCat('flash')">
-            <span class="cat-pick-icon">⚡</span><span>突然想到的一句话</span>
+            <span class="cat-pick-icon">⚡</span><span data-i18n="cp_flash">突然想到的一句话</span>
           </div>
           <div class="cat-pick" data-cat="moment"   onclick="pickCat('moment')">
-            <span class="cat-pick-icon">✦</span><span>触动时刻或回忆</span>
+            <span class="cat-pick-icon">✦</span><span data-i18n="cp_moment">触动时刻或回忆</span>
           </div>
           <div class="cat-pick" data-cat="view"     onclick="pickCat('view')">
-            <span class="cat-pick-icon">◉</span><span>完整观点</span>
+            <span class="cat-pick-icon">◉</span><span data-i18n="cp_view">完整观点</span>
           </div>
           <div class="cat-pick" data-cat="draft"    onclick="pickCat('draft')">
-            <span class="cat-pick-icon">◎</span><span>可输出的成稿</span>
+            <span class="cat-pick-icon">◎</span><span data-i18n="cp_draft">可输出的成稿</span>
           </div>
           <div class="cat-pick" data-cat="others"   onclick="pickCat('others')">
-            <span class="cat-pick-icon">※</span><span>对他人观点的记录</span>
+            <span class="cat-pick-icon">※</span><span data-i18n="cp_others">对他人观点的记录</span>
           </div>
           <div class="cat-pick" data-cat="reaction" onclick="pickCat('reaction')">
-            <span class="cat-pick-icon">▶</span><span>内容 Reaction</span>
+            <span class="cat-pick-icon">▶</span><span data-i18n="cp_reaction">内容 Reaction</span>
           </div>
           <div class="cat-pick" data-cat="record" onclick="pickCat('record')">
-            <span class="cat-pick-icon">□</span><span>视频/图文 记录</span>
+            <span class="cat-pick-icon">□</span><span data-i18n="cp_record">视频/图文 记录</span>
           </div>
           <div class="cat-pick" data-cat="prompt" onclick="pickCat('prompt')">
-            <span class="cat-pick-icon">✧</span><span>Useful AI Prompt</span>
+            <span class="cat-pick-icon">✧</span><span data-i18n="cp_prompt">Useful AI Prompt</span>
           </div>
           <div class="cat-pick" data-cat="ted" onclick="pickCat('ted')">
-            <span class="cat-pick-icon">◐</span><span>TED IDEAS</span>
+            <span class="cat-pick-icon">◐</span><span data-i18n="cp_ted">TED IDEAS</span>
           </div>
           <div class="cat-pick" data-cat="human" onclick="pickCat('human')">
-            <span class="cat-pick-icon">◑</span><span>人类观察</span>
+            <span class="cat-pick-icon">◑</span><span data-i18n="cp_human">人类观察</span>
           </div>
         </div>
       </div>
@@ -993,65 +994,65 @@ header {
       <!-- Reaction-only fields -->
       <div id="rxFields" style="display:none">
         <div class="fg">
-          <label class="label">内容链接</label>
+          <label class="label" data-i18n="fl_url">内容链接</label>
           <input class="input" id="fUrl" type="url" placeholder="https://..." />
         </div>
         <div class="fg">
-          <label class="label">视频 / 图文标题</label>
-          <input class="input" id="fLinkTitle" placeholder="内容标题..." />
+          <label class="label" data-i18n="fl_linkTitle">视频 / 图文标题</label>
+          <input class="input" id="fLinkTitle" data-i18n-ph="ph_linkTitle" placeholder="内容标题..." />
         </div>
       </div>
 
       <div class="fg">
-        <label class="label">标题 <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em">可选</span></label>
-        <input class="input" id="fTitle" placeholder="给这条记录起个标题..." />
+        <label class="label"><span data-i18n="fl_title">标题</span> <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em" data-i18n="optional">可选</span></label>
+        <input class="input" id="fTitle" data-i18n-ph="ph_title" placeholder="给这条记录起个标题..." />
       </div>
 
       <div class="fg">
-        <label class="label">内容</label>
+        <label class="label" data-i18n="fl_content">内容</label>
         <textarea class="textarea" id="fContent" rows="6" placeholder="记录你的想法..."></textarea>
       </div>
 
       <div class="fg">
-        <label class="label">备注</label>
-        <textarea class="textarea" id="fNotes" rows="2" placeholder="补充说明、来源、背景..."></textarea>
+        <label class="label" data-i18n="fl_notes">备注</label>
+        <textarea class="textarea" id="fNotes" rows="2" data-i18n-ph="ph_notes" placeholder="补充说明、来源、背景..."></textarea>
       </div>
 
       <div class="fg" id="doneField" style="display:none">
         <label class="check-row">
           <input type="checkbox" id="fDone" />
-          <span class="check-row-label">标记为已整理</span>
+          <span class="check-row-label" data-i18n="doneLabel">标记为已整理</span>
         </label>
       </div>
 
       <div class="fg">
-        <div class="label">图片 <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em">可选</span></div>
+        <div class="label"><span data-i18n="fl_img">图片</span> <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em" data-i18n="optional">可选</span></div>
         <div class="img-upload-zone" id="imgDropZone"
           onclick="document.getElementById('imgFileInput').click()"
           ondragover="imgDragOver(event)" ondragleave="imgDragLeave(event)" ondrop="imgDrop(event)">
           <div class="upload-icon">🖼</div>
-          点击上传 · 拖拽图片 · 粘贴图片<br>
-          <span style="font-size:10px;opacity:.7">支持 JPG / PNG / GIF / WebP，不支持 HEIC</span>
+          <span data-i18n="imgZone">点击上传 · 拖拽图片 · 粘贴图片</span><br>
+          <span style="font-size:10px;opacity:.7" data-i18n="imgZoneSub">支持 JPG / PNG / GIF / WebP，不支持 HEIC</span>
         </div>
         <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none" onchange="imgFileChange(event)" />
         <div class="img-preview-strip" id="imgPreviewStrip"></div>
       </div>
 
       <div class="fg">
-        <div class="label">附件 <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em">可选</span></div>
+        <div class="label"><span data-i18n="fl_file">附件</span> <span style="color:var(--text3);font-family:var(--f-mono);font-size:9px;letter-spacing:.06em" data-i18n="optional">可选</span></div>
         <div class="file-upload-zone" id="fileDropZone"
           onclick="document.getElementById('fileInput').click()"
           ondragover="fileDragOver(event)" ondragleave="fileDragLeave(event)" ondrop="fileDrop(event)">
-          📎 点击上传 · 拖拽文件<br>
-          <span style="font-size:10px;opacity:.7">支持 PDF · DOCX，单文件最大 25MB</span>
+          <span data-i18n="fileZone">📎 点击上传 · 拖拽文件</span><br>
+          <span style="font-size:10px;opacity:.7" data-i18n="fileZoneSub">支持 PDF · DOCX，单文件最大 25MB</span>
         </div>
         <input type="file" id="fileInput" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple style="display:none" onchange="fileInputChange(event)" />
         <div class="file-list" id="fileList"></div>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('addOverlay')">取消</button>
-      <button class="btn btn-primary" onclick="saveEntry()">保存记录</button>
+      <button class="btn btn-ghost" onclick="closeModal('addOverlay')" data-i18n="cancel">取消</button>
+      <button class="btn btn-primary" onclick="saveEntry()" data-i18n="saveEntry">保存记录</button>
     </div>
   </div>
 </div>
@@ -1064,8 +1065,8 @@ header {
       <span class="status-badge pending" id="detailStatus" onclick="toggleDone()"></span>
       <span class="public-toggle off" id="detailPublic" onclick="togglePublic()">◎ 公开</span>
       <div style="flex:1"></div>
-      <button class="btn btn-ghost btn-sm" onclick="editCurrent()">编辑</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteCurrent()">删除</button>
+      <button class="btn btn-ghost btn-sm" onclick="editCurrent()" data-i18n="edit">编辑</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCurrent()" data-i18n="del">删除</button>
       <button class="close-btn" onclick="closeModal('detailOverlay')">✕</button>
     </div>
     <div class="modal-body">
@@ -1084,11 +1085,11 @@ header {
 
       <!-- AI panel -->
       <div class="ai-panel">
-        <div class="ai-panel-label">AI 功能</div>
+        <div class="ai-panel-label" data-i18n="aiPanelL">AI 功能</div>
         <div class="ai-btns">
-          <button class="btn btn-ghost btn-sm" onclick="aiDo('summarize')">✦ 整理提炼</button>
-          <button class="btn btn-ghost btn-sm" onclick="aiDo('extend')">↗ 延伸观点</button>
-          <button class="btn btn-ghost btn-sm" onclick="aiDo('similar')">◈ 相似观点推荐</button>
+          <button class="btn btn-ghost btn-sm" onclick="aiDo('summarize')" data-i18n="ai_summarize">✦ 整理提炼</button>
+          <button class="btn btn-ghost btn-sm" onclick="aiDo('extend')" data-i18n="ai_extend">↗ 延伸观点</button>
+          <button class="btn btn-ghost btn-sm" onclick="aiDo('similar')" data-i18n="ai_similar">◈ 相似观点推荐</button>
         </div>
         <div class="ai-out" id="aiOut"></div>
       </div>
@@ -1102,17 +1103,17 @@ header {
 <div class="overlay" id="summaryOverlay" onclick="overlayClick(event,'summaryOverlay')">
   <div class="modal modal-lg">
     <div class="modal-head">
-      <div class="modal-title">✦ AI 总结与分析</div>
+      <div class="modal-title" data-i18n="summaryT">✦ AI 总结与分析</div>
       <button class="close-btn" onclick="closeModal('summaryOverlay')">✕</button>
     </div>
     <div class="modal-body">
       <div class="tab-row">
-        <button class="tab-btn active" onclick="summaryTab(this,'all')">全部想法总结</button>
-        <button class="tab-btn" onclick="summaryTab(this,'current')">当前筛选总结</button>
-        <button class="tab-btn" onclick="summaryTab(this,'themes')">主题分析</button>
-        <button class="tab-btn" onclick="summaryTab(this,'patterns')">思维模式</button>
+        <button class="tab-btn active" onclick="summaryTab(this,'all')" data-i18n="tab_all">全部想法总结</button>
+        <button class="tab-btn" onclick="summaryTab(this,'current')" data-i18n="tab_current">当前筛选总结</button>
+        <button class="tab-btn" onclick="summaryTab(this,'themes')" data-i18n="tab_themes">主题分析</button>
+        <button class="tab-btn" onclick="summaryTab(this,'patterns')" data-i18n="tab_patterns">思维模式</button>
       </div>
-      <div class="ai-out visible" id="summaryOut" style="min-height:120px">
+      <div class="ai-out visible" id="summaryOut" style="min-height:120px" data-i18n="summaryHint">
         点击上方按钮开始 AI 分析...
       </div>
     </div>
@@ -1123,41 +1124,41 @@ header {
 <div class="overlay" id="settingsOverlay" onclick="overlayClick(event,'settingsOverlay')">
   <div class="modal modal-sm">
     <div class="modal-head">
-      <div class="modal-title">设置</div>
+      <div class="modal-title" data-i18n="settingsTitle">设置</div>
       <button class="close-btn" onclick="closeModal('settingsOverlay')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="settings-note">
+      <div class="settings-note" data-i18n="settingsNote">
         数据存储在你的 GitHub 私有仓库，API 密钥仅保存在本地浏览器中，不会上传。
       </div>
 
-      <div class="settings-section-label">GitHub 数据仓库</div>
+      <div class="settings-section-label" data-i18n="setSecGH">GitHub 数据仓库</div>
       <div class="fg">
         <label class="label">Personal Access Token</label>
         <input class="input" id="sToken" type="password" placeholder="ghp_..." />
-        <div class="input-hint">需要 <code>repo</code> 权限。<a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noopener">创建 Token →</a></div>
+        <div class="input-hint" data-i18n-html="hint_token">需要 <code>repo</code> 权限。<a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noopener">创建 Token →</a></div>
       </div>
       <div class="fg">
-        <label class="label">GitHub 用户名</label>
+        <label class="label" data-i18n="fl_user">GitHub 用户名</label>
         <input class="input" id="sUser" placeholder="your-username" />
       </div>
       <div class="fg">
-        <label class="label">私有数据仓库名</label>
+        <label class="label" data-i18n="fl_repo">私有数据仓库名</label>
         <input class="input" id="sRepo" placeholder="my-thoughts-data" />
-        <div class="input-hint">数据将写入仓库根目录的 <code>thoughts.json</code></div>
+        <div class="input-hint" data-i18n-html="hint_repo">数据将写入仓库根目录的 <code>thoughts.json</code></div>
       </div>
 
-      <div class="settings-section-label" style="margin-top:20px">AI 功能</div>
+      <div class="settings-section-label" style="margin-top:20px" data-i18n="setSecAI">AI 功能</div>
       <div class="fg">
         <label class="label">Anthropic API Key</label>
         <input class="input" id="sKey" type="password" placeholder="sk-ant-..." />
-        <div class="input-hint">仅在本地使用，不会存入仓库。</div>
+        <div class="input-hint" data-i18n="hint_apikey">仅在本地使用，不会存入仓库。</div>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="testGitHub()">测试连接</button>
-      <button class="btn btn-ghost" onclick="closeModal('settingsOverlay')">取消</button>
-      <button class="btn btn-primary" onclick="saveSettings()">保存</button>
+      <button class="btn btn-ghost" onclick="testGitHub()" data-i18n="testConn">测试连接</button>
+      <button class="btn btn-ghost" onclick="closeModal('settingsOverlay')" data-i18n="cancel">取消</button>
+      <button class="btn btn-primary" onclick="saveSettings()" data-i18n="save">保存</button>
     </div>
   </div>
 </div>
@@ -1214,6 +1215,123 @@ const PLACEHOLDERS = {
   human:    '记录你观察到的人类行为或现象...',
 };
 
+/* ══════════════════════════════════════════════
+   双语 i18n（全站共享 pha-lang，默认 zh）
+══════════════════════════════════════════════ */
+let lang = (() => { try { return localStorage.getItem('pha-lang') === 'en' ? 'en' : 'zh'; } catch { return 'zh'; } })();
+const T = (zh, en) => lang === 'en' ? en : zh;
+// 显示辅助：e.category 是存储键；CATS.label / CAT_FULL 中文版仍供 AI prompt + export 用
+const CAT_LABEL_EN = { flash:'Quote', moment:'Moment', view:'View', draft:'Draft', others:'Others', reaction:'Reaction', record:'Record', prompt:'AI Prompt', ted:'TED IDEAS', human:'Observation' };
+const CAT_FULL_EN = { all:'All thoughts', flash:'A sudden line', moment:'A touching moment / memory', view:'Full viewpoint', draft:'Ready to publish', others:'Notes on others’ views', reaction:'Content Reaction', record:'Video / article notes', prompt:'Useful AI Prompt', ted:'TED IDEAS', human:'Human observation' };
+const PLACEHOLDERS_EN = { flash:'What did you think in that instant?', moment:'Describe the moment or memory that moved you...', view:'Write your full viewpoint...', draft:'Write something ready to publish...', others:'Record someone else’s view or claim...', reaction:'Write your reaction to this content...', record:'Record and summarize this video or article...', prompt:'Paste or write the prompt here...', ted:'If I gave a TED talk, what would I say...', human:'Record a human behavior or phenomenon you observed...' };
+const catLabel = k => lang === 'en' ? (CAT_LABEL_EN[k] || (CATS[k]||{}).label || k) : ((CATS[k]||{}).label || k);
+const catFull  = k => lang === 'en' ? (CAT_FULL_EN[k] || k) : (CAT_FULL[k] || k);
+const phFor    = k => lang === 'en' ? (PLACEHOLDERS_EN[k] || 'Write your thought...') : (PLACEHOLDERS[k] || '记录你的想法...');
+const I18N = {
+  logo:{zh:'思维库',en:'Mind Archive'},
+  btnSummary:{zh:'✦ AI 总结',en:'✦ AI Summary'},
+  btnExport:{zh:'↗ 导出展示',en:'↗ Export public'},
+  btnAdd:{zh:'+ 记录想法',en:'+ New thought'},
+  settingsT:{zh:'设置 (⌘,)',en:'Settings (⌘,)'},
+  side_cats:{zh:'分类',en:'Categories'},
+  side_stats:{zh:'统计',en:'Stats'},
+  nav_all:{zh:'全部想法',en:'All thoughts'},
+  nav_flash:{zh:'突然想到的话',en:'Sudden lines'},
+  nav_moment:{zh:'触动时刻',en:'Touching moments'},
+  nav_view:{zh:'完整观点',en:'Full viewpoints'},
+  nav_draft:{zh:'可输出成稿',en:'Ready to publish'},
+  nav_others:{zh:'他人观点',en:'Others’ views'},
+  nav_reaction:{zh:'内容 Reaction',en:'Content Reaction'},
+  nav_record:{zh:'视频/图文 记录',en:'Video/article notes'},
+  nav_prompt:{zh:'Useful AI Prompt',en:'Useful AI Prompt'},
+  nav_ted:{zh:'TED IDEAS',en:'TED IDEAS'},
+  nav_human:{zh:'人类观察',en:'Human observation'},
+  sync_nc:{zh:'未连接',en:'Not connected'},
+  stWeekL:{zh:'本周',en:'This week'}, stWeekU:{zh:'条',en:''},
+  stMonthL:{zh:'本月',en:'This month'},
+  searchPh:{zh:'搜索...',en:'Search...'},
+  // add modal
+  fl_cat:{zh:'分类',en:'Category'},
+  cp_flash:{zh:'突然想到的一句话',en:'A sudden line'},
+  cp_moment:{zh:'触动时刻或回忆',en:'A touching moment or memory'},
+  cp_view:{zh:'完整观点',en:'Full viewpoint'},
+  cp_draft:{zh:'可输出的成稿',en:'Ready-to-publish piece'},
+  cp_others:{zh:'对他人观点的记录',en:'Notes on others’ views'},
+  cp_reaction:{zh:'内容 Reaction',en:'Content Reaction'},
+  cp_record:{zh:'视频/图文 记录',en:'Video / article notes'},
+  cp_prompt:{zh:'Useful AI Prompt',en:'Useful AI Prompt'},
+  cp_ted:{zh:'TED IDEAS',en:'TED IDEAS'},
+  cp_human:{zh:'人类观察',en:'Human observation'},
+  fl_url:{zh:'内容链接',en:'Content link'},
+  fl_linkTitle:{zh:'视频 / 图文标题',en:'Video / article title'},
+  ph_linkTitle:{zh:'内容标题...',en:'Content title...'},
+  fl_title:{zh:'标题',en:'Title'},
+  optional:{zh:'可选',en:'optional'},
+  ph_title:{zh:'给这条记录起个标题...',en:'Give this entry a title...'},
+  fl_content:{zh:'内容',en:'Content'},
+  fl_notes:{zh:'备注',en:'Notes'},
+  ph_notes:{zh:'补充说明、来源、背景...',en:'Extra notes, source, context...'},
+  doneLabel:{zh:'标记为已整理',en:'Mark as organized'},
+  fl_img:{zh:'图片',en:'Images'},
+  imgZone:{zh:'点击上传 · 拖拽图片 · 粘贴图片',en:'Click to upload · drag · paste'},
+  imgZoneSub:{zh:'支持 JPG / PNG / GIF / WebP，不支持 HEIC',en:'JPG / PNG / GIF / WebP supported, no HEIC'},
+  fl_file:{zh:'附件',en:'Attachments'},
+  fileZone:{zh:'📎 点击上传 · 拖拽文件',en:'📎 Click to upload · drag files'},
+  fileZoneSub:{zh:'支持 PDF · DOCX，单文件最大 25MB',en:'PDF · DOCX, max 25MB each'},
+  cancel:{zh:'取消',en:'Cancel'},
+  saveEntry:{zh:'保存记录',en:'Save'},
+  // detail modal
+  edit:{zh:'编辑',en:'Edit'},
+  del:{zh:'删除',en:'Delete'},
+  aiPanelL:{zh:'AI 功能',en:'AI tools'},
+  ai_summarize:{zh:'✦ 整理提炼',en:'✦ Distill'},
+  ai_extend:{zh:'↗ 延伸观点',en:'↗ Extend'},
+  ai_similar:{zh:'◈ 相似观点推荐',en:'◈ Similar views'},
+  // summary modal
+  summaryT:{zh:'✦ AI 总结与分析',en:'✦ AI Summary & Analysis'},
+  tab_all:{zh:'全部想法总结',en:'Summarize all'},
+  tab_current:{zh:'当前筛选总结',en:'Summarize current'},
+  tab_themes:{zh:'主题分析',en:'Theme analysis'},
+  tab_patterns:{zh:'思维模式',en:'Thinking patterns'},
+  summaryHint:{zh:'点击上方按钮开始 AI 分析...',en:'Click a button above to start AI analysis...'},
+  // settings modal
+  settingsTitle:{zh:'设置',en:'Settings'},
+  settingsNote:{zh:'数据存储在你的 GitHub 私有仓库，API 密钥仅保存在本地浏览器中，不会上传。',en:'Data is stored in your private GitHub repo; the API key stays only in this browser and is never uploaded.'},
+  setSecGH:{zh:'GitHub 数据仓库',en:'GitHub data repo'},
+  hint_token:{zh:'需要 <code>repo</code> 权限。<a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noopener">创建 Token →</a>',en:'Needs <code>repo</code> scope. <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noopener">Create token →</a>'},
+  hint_repo:{zh:'数据将写入仓库根目录的 <code>thoughts.json</code>',en:'Data is written to <code>thoughts.json</code> in the repo root'},
+  fl_user:{zh:'GitHub 用户名',en:'GitHub username'},
+  fl_repo:{zh:'私有数据仓库名',en:'Private data repo name'},
+  setSecAI:{zh:'AI 功能',en:'AI features'},
+  hint_apikey:{zh:'仅在本地使用，不会存入仓库。',en:'Used locally only, never stored in the repo.'},
+  testConn:{zh:'测试连接',en:'Test connection'},
+  save:{zh:'保存',en:'Save'},
+  langBtn:{zh:'EN',en:'中'},
+};
+const Ls = k => (I18N[k] || {zh:k,en:k})[lang];
+function applyStatic(){
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh';
+  document.title = lang === 'en' ? 'Mind Archive' : '思维库 · Mind Archive';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = Ls(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = Ls(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = Ls(el.dataset.i18nTitle); });
+  const lb = document.getElementById('langBtn'); if (lb) lb.textContent = Ls('langBtn');
+}
+function toggleLang(){
+  lang = lang === 'en' ? 'zh' : 'en';
+  try { localStorage.setItem('pha-lang', lang); } catch {}
+  applyStatic();
+  setSyncUI(document.getElementById('syncDot').classList.contains('ok') ? 'ok' : document.getElementById('syncDot').classList.contains('busy') ? 'busy' : document.getElementById('syncDot').classList.contains('fail') ? 'fail' : '');
+  renderList();
+  updateCounts();
+  if (document.getElementById('detailOverlay').classList.contains('open') && activEntry) {
+    const cat = CATS[activEntry.category] || {};
+    const chip = document.getElementById('detailChip');
+    chip.textContent = `${cat.icon} ${catFull(activEntry.category)}`;
+    refreshDetailStatus(activEntry); refreshDetailPublic(activEntry);
+  }
+}
+
 const cfg = {
   get token()  { return localStorage.getItem('ma_token')  || ''; },
   get user()   { return localStorage.getItem('ma_user')   || ''; },
@@ -1238,6 +1356,7 @@ let pendingFiles  = []; // [{file, name, size, type, path}] staged in add form
    BOOT
 ══════════════════════════════════════════════ */
 async function boot() {
+  applyStatic();
   loadLocal();
   renderList();
   updateCounts();
@@ -1271,8 +1390,8 @@ function setSyncUI(state) {
   const dot   = document.getElementById('syncDot');
   const label = document.getElementById('syncLabel');
   dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'busy' ? 'busy' : state === 'fail' ? 'fail' : '');
-  const map = { ok: '已同步', busy: '同步中', fail: '同步失败', '': '未连接' };
-  label.textContent = map[state] || '未连接';
+  const map = { ok: T('已同步','Synced'), busy: T('同步中','Syncing'), fail: T('同步失败','Sync failed'), '': T('未连接','Not connected') };
+  label.textContent = map[state] || T('未连接','Not connected');
 }
 
 function ghReq(method, path, body) {
@@ -1300,24 +1419,24 @@ async function ghPull() {
     let rawText;
     if (j.encoding === 'none') {
       // File genuinely too large for Contents API — use the download_url (token already embedded)
-      if (!j.download_url) throw new Error('文件过大且无下载链接');
+      if (!j.download_url) throw new Error(T('文件过大且无下载链接','File too large and no download URL'));
       const dl = await fetch(j.download_url);
-      if (!dl.ok) throw new Error('大文件下载失败 HTTP ' + dl.status);
+      if (!dl.ok) throw new Error(T('大文件下载失败 HTTP ','Large file download failed HTTP ') + dl.status);
       rawText = await dl.text();
     } else if (!j.content || j.content.replace(/[\s\n]/g, '') === '') {
-      throw new Error('thoughts.json 内容为空，请检查仓库文件');
+      throw new Error(T('thoughts.json 内容为空，请检查仓库文件','thoughts.json is empty — check the repo file'));
     } else {
       rawText = decodeB64(j.content);
     }
 
-    if (!rawText || rawText.trim() === '') throw new Error('thoughts.json 内容为空');
+    if (!rawText || rawText.trim() === '') throw new Error(T('thoughts.json 内容为空','thoughts.json is empty'));
     const parsed = JSON.parse(rawText);
     entries = parsed.entries || [];
     saveLocal();
     setSyncUI('ok');
   } catch(e) {
     setSyncUI('fail');
-    toast('同步失败: ' + e.message, 'err');
+    toast(T('同步失败: ','Sync failed: ') + e.message, 'err');
   }
 }
 
@@ -1332,7 +1451,7 @@ async function ghPush() {
       const j = await getR.json();
       sha = j.sha;
     } else if (getR.status !== 404) {
-      throw new Error('读取文件失败 HTTP ' + getR.status);
+      throw new Error(T('读取文件失败 HTTP ','Read file failed HTTP ') + getR.status);
     }
 
     const r = await ghReq('PUT', 'thoughts.json', {
@@ -1346,11 +1465,11 @@ async function ghPush() {
     }
     saveLocal();
     setSyncUI('ok');
-    toast('已同步到 GitHub', 'ok');
+    toast(T('已同步到 GitHub','Synced to GitHub'), 'ok');
   } catch(e) {
     setSyncUI('fail');
     saveLocal();
-    toast('同步失败: ' + e.message, 'err');
+    toast(T('同步失败: ','Sync failed: ') + e.message, 'err');
   }
 }
 
@@ -1363,8 +1482,8 @@ function uid() {
 
 async function saveEntry() {
   const content = document.getElementById('fContent').value.trim();
-  if (!selCat)    { toast('请选择分类', 'err'); return; }
-  if (!content)   { toast('请输入内容', 'err'); return; }
+  if (!selCat)    { toast(T('请选择分类','Pick a category'), 'err'); return; }
+  if (!content)   { toast(T('请输入内容','Enter some content'), 'err'); return; }
 
   const saveBtn = document.querySelector('#addOverlay .btn-primary');
   let images, attachments;
@@ -1409,7 +1528,7 @@ async function saveEntry() {
 }
 
 async function deleteCurrent() {
-  if (!activEntry || !confirm('确定删除这条记录？')) return;
+  if (!activEntry || !confirm(T('确定删除这条记录？','Delete this entry?'))) return;
   entries = entries.filter(e => e.id !== activEntry.id);
   closeModal('detailOverlay');
   activEntry = null;
@@ -1440,14 +1559,14 @@ function renderList() {
     return catOk && qOk;
   });
 
-  document.getElementById('mainTitle').textContent = CAT_FULL[filter];
-  document.getElementById('mainMeta').textContent  = `共 ${filtered.length} 条记录`;
+  document.getElementById('mainTitle').textContent = catFull(filter);
+  document.getElementById('mainMeta').textContent  = T(`共 ${filtered.length} 条记录`,`${filtered.length} entries`);
 
   if (!filtered.length) {
     list.innerHTML = `<div class="empty">
       <div class="empty-glyph">◈</div>
-      <div class="empty-title">${q ? '没有匹配的记录' : '这里还是空的'}</div>
-      <div class="empty-desc">${q ? '换一个关键词试试？' : '点击右上角「记录想法」开始记录，<br>或前往设置连接你的 GitHub 数据仓库。'}</div>
+      <div class="empty-title">${q ? T('没有匹配的记录','No matching entries') : T('这里还是空的','Nothing here yet')}</div>
+      <div class="empty-desc">${q ? T('换一个关键词试试？','Try another keyword?') : T('点击右上角「记录想法」开始记录，<br>或前往设置连接你的 GitHub 数据仓库。','Click “New thought” at top-right to start,<br>or open Settings to connect your GitHub data repo.')}</div>
     </div>`;
     return;
   }
@@ -1456,19 +1575,19 @@ function renderList() {
     const cat  = CATS[e.category] || {};
     const date = fmtDate(e.createdAt);
     const titleH  = e.title ? `<div class="entry-title">${esc(e.title)}</div>` : '';
-    const noteH   = e.notes ? `<div class="entry-notes">备注: ${esc(e.notes)}</div>` : '';
+    const noteH   = e.notes ? `<div class="entry-notes">${T('备注: ','Note: ')}${esc(e.notes)}</div>` : '';
     const linkH   = e.url   ? `<div class="entry-link">🔗 ${esc(e.linkTitle || e.url)}</div>` : '';
-    const pubH    = e.public ? `<span class="public-badge">◎ 公开</span>` : '';
+    const pubH    = e.public ? `<span class="public-badge">◎ ${T('公开','Public')}</span>` : '';
     const imgs    = e.images || [];
-    const imgH    = imgs.length ? `<div class="card-img-strip"><span style="font-size:11px;color:var(--text3);font-family:var(--f-mono)">🖼 ${imgs.length} 张图片</span></div>` : '';
+    const imgH    = imgs.length ? `<div class="card-img-strip"><span style="font-size:11px;color:var(--text3);font-family:var(--f-mono)">🖼 ${T(`${imgs.length} 张图片`,`${imgs.length} image(s)`)}</span></div>` : '';
     const statusH = needsLink(e.category)
       ? (e.done
-          ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">✓ 已整理</span>`
-          : `<span class="status-badge pending" onclick="event.stopPropagation();quickToggle('${e.id}')">○ 待整理</span>`)
+          ? `<span class="status-badge done"    onclick="event.stopPropagation();quickToggle('${e.id}')">${T('✓ 已整理','✓ Organized')}</span>`
+          : `<span class="status-badge pending" onclick="event.stopPropagation();quickToggle('${e.id}')">${T('○ 待整理','○ To organize')}</span>`)
       : '';
     return `<div class="entry-card" onclick="openDetail('${e.id}')">
       <div class="entry-header">
-        <span class="cat-chip ${cat.cls}">${cat.icon} ${cat.label}</span>
+        <span class="cat-chip ${cat.cls}">${cat.icon} ${catLabel(e.category)}</span>
         ${statusH}
         ${pubH}
         <span class="entry-date">${date}</span>
@@ -1521,7 +1640,7 @@ function openAdd(entry = null) {
   editId  = entry ? entry.id : null;
   selCat  = entry ? entry.category : '';
 
-  document.getElementById('addTitle').textContent     = entry ? '编辑记录' : '记录新想法';
+  document.getElementById('addTitle').textContent     = entry ? T('编辑记录','Edit entry') : T('记录新想法','New thought');
   document.getElementById('fTitle').value             = entry ? (entry.title || '') : '';
   document.getElementById('fContent').value           = entry ? entry.content   : '';
   document.getElementById('fNotes').value             = entry ? entry.notes     : '';
@@ -1538,7 +1657,7 @@ function openAdd(entry = null) {
   });
   document.getElementById('rxFields').style.display   = needsLink(selCat) ? 'block' : 'none';
   document.getElementById('doneField').style.display  = needsLink(selCat) ? 'block' : 'none';
-  document.getElementById('fContent').placeholder     = PLACEHOLDERS[selCat] || '记录你的想法...';
+  document.getElementById('fContent').placeholder     = selCat ? phFor(selCat) : T('记录你的想法...','Write your thought...');
   document.getElementById('fContent').style.fontFamily = selCat === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('fContent').rows = selCat === 'prompt' ? 10 : 6;
 
@@ -1555,7 +1674,7 @@ function pickCat(cat) {
   document.querySelectorAll('.cat-pick').forEach(el => el.classList.toggle('on', el.dataset.cat === cat));
   document.getElementById('rxFields').style.display   = needsLink(cat) ? 'block' : 'none';
   document.getElementById('doneField').style.display  = needsLink(cat) ? 'block' : 'none';
-  document.getElementById('fContent').placeholder     = PLACEHOLDERS[cat];
+  document.getElementById('fContent').placeholder     = phFor(cat);
   document.getElementById('fContent').style.fontFamily = cat === 'prompt' ? 'var(--f-mono)' : 'var(--f-body)';
   document.getElementById('fContent').rows = cat === 'prompt' ? 10 : 6;
 }
@@ -1570,7 +1689,7 @@ function openDetail(id) {
 
   const cat = CATS[e.category] || {};
   const chip = document.getElementById('detailChip');
-  chip.textContent = `${cat.icon} ${CAT_FULL[e.category]}`;
+  chip.textContent = `${cat.icon} ${catFull(e.category)}`;
   chip.className   = `cat-chip ${cat.cls}`;
 
   // title
@@ -1596,7 +1715,7 @@ function openDetail(id) {
   if (imgs.length) {
     gallery.style.display = '';
     gallery.innerHTML = imgs.map((img, i) =>
-      `<div id="igw${i}" class="img-loading-ph">加载中...</div>`
+      `<div id="igw${i}" class="img-loading-ph">${T('加载中...','Loading...')}</div>`
     ).join('');
     imgs.forEach((img, i) => {
       const srcPromise = (!img.path && img.src)
@@ -1613,7 +1732,7 @@ function openDetail(id) {
           img.onclick = () => openLightbox(i);
           el.replaceWith(img);
         } else {
-          el.textContent = '图片加载失败';
+          el.textContent = T('图片加载失败','Image failed to load');
         }
       });
     });
@@ -1638,7 +1757,7 @@ function openDetail(id) {
   }
 
   document.getElementById('detailTs').textContent =
-    '记录于 ' + new Date(e.createdAt).toLocaleString('zh-CN');
+    T('记录于 ','Recorded ') + new Date(e.createdAt).toLocaleString(lang === 'en' ? 'en-US' : 'zh-CN');
 
   const aiOut = document.getElementById('aiOut');
   aiOut.classList.remove('visible');
@@ -1655,10 +1774,10 @@ function refreshDetailStatus(e) {
   }
   el.style.display = '';
   if (e.done) {
-    el.textContent = '✓ 已整理';
+    el.textContent = T('✓ 已整理','✓ Organized');
     el.className   = 'status-badge done';
   } else {
-    el.textContent = '○ 待整理';
+    el.textContent = T('○ 待整理','○ To organize');
     el.className   = 'status-badge pending';
   }
 }
@@ -1688,7 +1807,7 @@ async function quickToggle(id) {
 ══════════════════════════════════════════════ */
 function openSummary() {
   document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
-  document.getElementById('summaryOut').textContent = '点击上方按钮开始 AI 分析...';
+  document.getElementById('summaryOut').textContent = Ls('summaryHint');
   openModal('summaryOverlay');
 }
 
@@ -1699,7 +1818,7 @@ function summaryTab(btn, mode) {
     ? entries.filter(e => filter === 'all' || e.category === filter)
     : entries;
   if (!src.length) {
-    document.getElementById('summaryOut').textContent = '没有可分析的记录。';
+    document.getElementById('summaryOut').textContent = T('没有可分析的记录。','No entries to analyze.');
     return;
   }
   const prompts = {
@@ -1756,12 +1875,12 @@ ${e.notes ? `备注：${e.notes}` : ''}
 
 async function callAI(prompt, outEl) {
   if (!cfg.apiKey) {
-    outEl.textContent = '请先在设置中填写 Anthropic API Key。';
+    outEl.textContent = T('请先在设置中填写 Anthropic API Key。','Add your Anthropic API Key in Settings first.');
     outEl.classList.add('visible');
     return;
   }
   outEl.classList.add('visible');
-  outEl.innerHTML = `<div class="ai-loading"><div class="dots"><span></span><span></span><span></span></div><span>AI 思考中...</span></div>`;
+  outEl.innerHTML = `<div class="ai-loading"><div class="dots"><span></span><span></span><span></span></div><span>${T('AI 思考中...','AI thinking...')}</span></div>`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1815,7 +1934,7 @@ function saveSettings() {
   localStorage.setItem('ma_repo',   document.getElementById('sRepo').value.trim());
   localStorage.setItem('ma_apikey', document.getElementById('sKey').value.trim());
   closeModal('settingsOverlay');
-  toast('设置已保存', 'ok');
+  toast(T('设置已保存','Settings saved'), 'ok');
   if (cfg.token && cfg.user && cfg.repo) {
     ghPull().then(() => { renderList(); updateCounts(); });
   }
@@ -1825,17 +1944,17 @@ async function testGitHub() {
   const t = document.getElementById('sToken').value.trim();
   const u = document.getElementById('sUser').value.trim();
   const r = document.getElementById('sRepo').value.trim();
-  if (!t || !u || !r) { toast('请填写完整的 GitHub 信息', 'err'); return; }
+  if (!t || !u || !r) { toast(T('请填写完整的 GitHub 信息','Fill in all GitHub fields'), 'err'); return; }
   try {
     const res = await fetch(`https://api.github.com/repos/${u}/${r}`, {
       headers: { 'Authorization': 'Bearer ' + t, 'Accept': 'application/vnd.github+json' },
     });
-    if (res.ok) toast('GitHub 连接成功 ✓', 'ok');
+    if (res.ok) toast(T('GitHub 连接成功 ✓','GitHub connected ✓'), 'ok');
     else {
       const e = await res.json();
-      toast('连接失败: ' + e.message, 'err');
+      toast(T('连接失败: ','Connection failed: ') + e.message, 'err');
     }
-  } catch(e) { toast('连接失败: ' + e.message, 'err'); }
+  } catch(e) { toast(T('连接失败: ','Connection failed: ') + e.message, 'err'); }
 }
 
 /* ══════════════════════════════════════════════
@@ -1891,9 +2010,9 @@ function fileExt(name) {
 function addFiles(fileList) {
   for (const f of fileList) {
     const ext = fileExt(f.name);
-    if (!['pdf','docx'].includes(ext)) { toast('只支持 PDF 和 DOCX', 'err'); continue; }
-    if (f.size > 25 * 1024 * 1024) { toast(`${f.name} 超过 25MB，已跳过`, 'err'); continue; }
-    if (pendingFiles.find(p => p.name === f.name)) { toast(`${f.name} 已存在`, 'err'); continue; }
+    if (!['pdf','docx'].includes(ext)) { toast(T('只支持 PDF 和 DOCX','Only PDF and DOCX supported'), 'err'); continue; }
+    if (f.size > 25 * 1024 * 1024) { toast(T(`${f.name} 超过 25MB，已跳过`,`${f.name} exceeds 25MB, skipped`), 'err'); continue; }
+    if (pendingFiles.find(p => p.name === f.name)) { toast(T(`${f.name} 已存在`,`${f.name} already added`), 'err'); continue; }
     pendingFiles.push({ file: f, name: f.name, size: f.size, type: ext, path: null });
   }
   renderFileList();
@@ -1906,7 +2025,7 @@ function renderFileList() {
       <span class="file-item-icon">${FILE_ICONS[f.type] || '📎'}</span>
       <span class="file-item-name" title="${esc(f.name)}">${esc(f.name)}</span>
       <span class="file-item-size">${fmtSize(f.size)}</span>
-      <span class="file-item-badge ${f.path ? 'uploaded' : 'pending'}">${f.path ? '✓' : '待传'}</span>
+      <span class="file-item-badge ${f.path ? 'uploaded' : 'pending'}">${f.path ? '✓' : T('待传','pending')}</span>
       <button class="file-item-del" onclick="removeFile(${i})">✕</button>
     </div>`).join('');
 }
@@ -1936,7 +2055,7 @@ async function uploadPendingFiles(saveBtn) {
   if (!toUpload.length || !cfg.token || !cfg.user || !cfg.repo) {
     return pendingFiles.map(f => ({ path: f.path, name: f.name, size: f.size, type: f.type }));
   }
-  if (saveBtn) { saveBtn.textContent = '上传文件中...'; saveBtn.disabled = true; }
+  if (saveBtn) { saveBtn.textContent = T('上传文件中...','Uploading files...'); saveBtn.disabled = true; }
   for (let i = 0; i < pendingFiles.length; i++) {
     const f = pendingFiles[i];
     if (!f.path) {
@@ -1944,18 +2063,18 @@ async function uploadPendingFiles(saveBtn) {
         f.path = await ghUploadFile(f.file);
         renderFileList();
       } catch(e) {
-        toast('文件上传失败: ' + e.message, 'err');
-        if (saveBtn) { saveBtn.textContent = '保存记录'; saveBtn.disabled = false; }
+        toast(T('文件上传失败: ','File upload failed: ') + e.message, 'err');
+        if (saveBtn) { saveBtn.textContent = Ls('saveEntry'); saveBtn.disabled = false; }
         throw e;
       }
     }
   }
-  if (saveBtn) { saveBtn.textContent = '保存记录'; saveBtn.disabled = false; }
+  if (saveBtn) { saveBtn.textContent = Ls('saveEntry'); saveBtn.disabled = false; }
   return pendingFiles.map(f => ({ path: f.path, name: f.name, size: f.size, type: f.type }));
 }
 
 async function downloadAttachment(path, name, type) {
-  toast('下载中...', '');
+  toast(T('下载中...','Downloading...'), '');
   try {
     const r = await ghReq('GET', path);
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1963,7 +2082,7 @@ async function downloadAttachment(path, name, type) {
 
     let blob;
     if (j.encoding === 'none' || !j.content || j.content.replace(/\s/g,'') === '') {
-      if (!j.download_url) throw new Error('无下载链接');
+      if (!j.download_url) throw new Error(T('无下载链接','No download URL'));
       const dl = await fetch(j.download_url); // token in URL, no auth header
       if (!dl.ok) throw new Error('HTTP ' + dl.status);
       blob = await dl.blob();
@@ -1978,9 +2097,9 @@ async function downloadAttachment(path, name, type) {
     const a = document.createElement('a');
     a.href = url; a.download = name; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    toast('下载完成', 'ok');
+    toast(T('下载完成','Downloaded'), 'ok');
   } catch(e) {
-    toast('下载失败: ' + e.message, 'err');
+    toast(T('下载失败: ','Download failed: ') + e.message, 'err');
   }
 }
 
@@ -1988,13 +2107,13 @@ function renderDetailAttachments(attachments) {
   const el = document.getElementById('detailAttachments');
   if (!attachments || !attachments.length) { el.style.display = 'none'; return; }
   el.style.display = '';
-  el.innerHTML = `<div class="detail-attach-label">附件</div>` +
+  el.innerHTML = `<div class="detail-attach-label">${T('附件','Attachments')}</div>` +
     attachments.map(a => `
       <div class="attach-item" onclick="downloadAttachment('${esc(a.path)}','${esc(a.name)}','${esc(a.type)}')">
         <span class="attach-icon">${FILE_ICONS[a.type] || '📎'}</span>
         <span class="attach-name">${esc(a.name)}</span>
         <span class="attach-size">${fmtSize(a.size)}</span>
-        <span class="attach-dl">↓ 下载</span>
+        <span class="attach-dl">${T('↓ 下载','↓ Download')}</span>
       </div>`).join('');
 }
 
@@ -2004,7 +2123,7 @@ function renderDetailAttachments(attachments) {
 function refreshDetailPublic(e) {
   const el = document.getElementById('detailPublic');
   el.className = 'public-toggle ' + (e.public ? 'on' : 'off');
-  el.textContent = e.public ? '◎ 公开 ✓' : '◎ 公开';
+  el.textContent = e.public ? T('◎ 公开 ✓','◎ Public ✓') : T('◎ 公开','◎ Public');
 }
 
 async function togglePublic() {
@@ -2020,7 +2139,7 @@ async function togglePublic() {
 
 function exportPublicJSON() {
   const pub = entries.filter(e => e.public);
-  if (!pub.length) { toast('没有标记为「公开」的条目', 'err'); return; }
+  if (!pub.length) { toast(T('没有标记为「公开」的条目','No items marked public'), 'err'); return; }
 
   // Group by category, preserving sidebar order
   const catOrder = ['flash','moment','view','draft','others','reaction','record','prompt','ted','human'];
@@ -2067,17 +2186,17 @@ async function publishPublic(filename, json, count) {
       let sha = null;
       const getR = await fetch(url, { headers: hdrs });
       if (getR.ok) sha = (await getR.json()).sha;
-      else if (getR.status !== 404) throw new Error('读取文件失败 HTTP ' + getR.status);
+      else if (getR.status !== 404) throw new Error(T('读取文件失败 HTTP ','Read file failed HTTP ') + getR.status);
       const r = await fetch(url, { method: 'PUT', headers: hdrs, body: JSON.stringify({
         message: `publish ${filename} (${count} entries)`,
         content: encodeB64(json),
         ...(sha ? { sha } : {}),
       }) });
       if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || 'HTTP ' + r.status); }
-      toast(`已发布 ${count} 条公开内容 → ${filename}`, 'ok');
+      toast(T(`已发布 ${count} 条公开内容 → ${filename}`,`Published ${count} public items → ${filename}`), 'ok');
       return;
     } catch (e) {
-      toast('发布失败: ' + e.message + '，已转为本地下载', 'err');
+      toast(T('发布失败: ','Publish failed: ') + e.message + T('，已转为本地下载',', fell back to local download'), 'err');
     }
   }
   const blob = new Blob([json], { type: 'application/json' });
@@ -2085,7 +2204,7 @@ async function publishPublic(filename, json, count) {
   const a    = document.createElement('a');
   a.href = url; a.download = filename; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
-  toast(`已导出 ${count} 条公开内容（本地下载）`, 'ok');
+  toast(T(`已导出 ${count} 条公开内容（本地下载）`,`Exported ${count} public items (local download)`), 'ok');
 }
 
 /* ══════════════════════════════════════════════
@@ -2162,7 +2281,7 @@ function fileToDataURL(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
     r.onload  = () => res(r.result);
-    r.onerror = () => rej(new Error('读取失败'));
+    r.onerror = () => rej(new Error(T('读取失败','Read failed')));
     r.readAsDataURL(file);
   });
 }
@@ -2172,7 +2291,7 @@ function fileToBase64(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
     r.onload  = () => res(r.result.split(',')[1]);
-    r.onerror = () => rej(new Error('读取失败'));
+    r.onerror = () => rej(new Error(T('读取失败','Read failed')));
     r.readAsDataURL(file);
   });
 }
@@ -2188,7 +2307,7 @@ async function ghUploadImage(file) {
   });
   if (!r.ok) {
     const e = await r.json().catch(() => ({}));
-    throw new Error(e.message || '图片上传失败');
+    throw new Error(e.message || T('图片上传失败','Image upload failed'));
   }
   return path;
 }
@@ -2199,10 +2318,10 @@ async function addImgFiles(files) {
     const isHeic = f.type === 'image/heic' || f.type === 'image/heif'
       || f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif');
     if (isHeic) {
-      toast('不支持 HEIC，请先转为 JPG（相册 → 分享 → 存储为文件 → JPG）', 'err');
+      toast(T('不支持 HEIC，请先转为 JPG（相册 → 分享 → 存储为文件 → JPG）','HEIC not supported — convert to JPG first (Photos → Share → Save to Files → JPG)'), 'err');
       continue;
     }
-    if (f.size > 10 * 1024 * 1024) { toast('图片超过 10MB，已跳过', 'err'); continue; }
+    if (f.size > 10 * 1024 * 1024) { toast(T('图片超过 10MB，已跳过','Image exceeds 10MB, skipped'), 'err'); continue; }
     const preview = await fileToDataURL(f);
     pendingImgs.push({ file: f, name: f.name, preview, path: null });
   }
@@ -2215,11 +2334,11 @@ function renderImgPreview() {
     const src = img.preview || '';
     const badge = img.path
       ? `<span style="position:absolute;bottom:3px;left:3px;background:rgba(58,138,74,.85);color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;font-family:var(--f-mono)">✓</span>`
-      : `<span style="position:absolute;bottom:3px;left:3px;background:rgba(200,149,58,.85);color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;font-family:var(--f-mono)">待传</span>`;
+      : `<span style="position:absolute;bottom:3px;left:3px;background:rgba(200,149,58,.85);color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;font-family:var(--f-mono)">${T('待传','pending')}</span>`;
     return `<div class="img-thumb-wrap">
       <img class="img-thumb" id="pt${i}" src="${src}" alt="${esc(img.name)}" />
       ${badge}
-      <button class="img-thumb-del" onclick="removeImg(${i})" title="删除">✕</button>
+      <button class="img-thumb-del" onclick="removeImg(${i})" title="${T('删除','Delete')}">✕</button>
     </div>`;
   }).join('');
   // Async-load previews for already-uploaded images (no local preview)
@@ -2265,7 +2384,7 @@ async function uploadPendingImages(saveBtn) {
   const toUpload = pendingImgs.filter(img => !img.path);
 
   if (toUpload.length && cfg.token && cfg.user && cfg.repo) {
-    if (saveBtn) { saveBtn.textContent = '上传图片中...'; saveBtn.disabled = true; }
+    if (saveBtn) { saveBtn.textContent = T('上传图片中...','Uploading images...'); saveBtn.disabled = true; }
     for (let i = 0; i < pendingImgs.length; i++) {
       const img = pendingImgs[i];
       if (!img.path) {
@@ -2273,14 +2392,14 @@ async function uploadPendingImages(saveBtn) {
           img.path = await ghUploadImage(img.file);
           renderImgPreview();
         } catch(e) {
-          toast('图片上传失败: ' + e.message, 'err');
-          if (saveBtn) { saveBtn.textContent = '保存记录'; saveBtn.disabled = false; }
+          toast(T('图片上传失败: ','Image upload failed: ') + e.message, 'err');
+          if (saveBtn) { saveBtn.textContent = Ls('saveEntry'); saveBtn.disabled = false; }
           throw e;
         }
       }
       results.push({ path: img.path, name: img.name });
     }
-    if (saveBtn) { saveBtn.textContent = '保存记录'; saveBtn.disabled = false; }
+    if (saveBtn) { saveBtn.textContent = Ls('saveEntry'); saveBtn.disabled = false; }
   } else {
     // No GitHub or no pending — keep as-is (path already set or fallback base64 via preview)
     for (const img of pendingImgs) {

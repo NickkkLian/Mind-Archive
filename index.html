@@ -1363,7 +1363,7 @@ let pendingFiles  = []; // [{file, name, size, type, path}] staged in add form
 ══════════════════════════════════════════════ */
 async function boot() {
   applyStatic();
-  loadLocal();
+  await loadLocal();
   renderList();
   updateCounts();
   if (cfg.token && cfg.user && cfg.repo) {
@@ -1374,19 +1374,97 @@ async function boot() {
 }
 
 /* ══════════════════════════════════════════════
-   LOCAL STORAGE FALLBACK
+   本地缓存（离线兜底）
+
+   ⚠️ 三条铁律：
+   1. **数据的真相在仓库里，这里只是离线兜底** —— 缓存写失败绝不能冒充「同步失败」把人吓着。
+      所以 saveLocal 自己吞掉全部异常，永远不向上抛。
+   2. **优先 IndexedDB**：localStorage 每个 origin 只有约 5MB，而同一个 origin 下挂着一堆 app
+      共用这点配额；IndexedDB 通常是几百 MB 起。
+   3. **实在写不下就瘦身再存**：剥掉图片预览与附件内容（那些能从仓库重新取），
+      只留文字 —— 离线时能看内容比什么都存不下强。
 ══════════════════════════════════════════════ */
-function loadLocal() {
-  try {
-    const d = JSON.parse(localStorage.getItem('ma_local') || '{}');
-    entries = d.entries || [];
-  } catch(e) {
-    entries = [];
-    console.warn('本地缓存损坏，已重置:', e.message);
-  }
+const LocalCache = (() => {
+  const DB = 'ma_cache', STORE = 'kv';
+  let db = null, tried = false;
+  const open = () => new Promise(res => {
+    if (tried) return res(db);
+    tried = true;
+    try {
+      if (!window.indexedDB) return res(null);
+      const rq = indexedDB.open(DB, 1);
+      rq.onupgradeneeded = () => { try { rq.result.createObjectStore(STORE); } catch(e){} };
+      rq.onsuccess = () => { db = rq.result; res(db); };
+      rq.onerror = () => res(null);
+      rq.onblocked = () => res(null);
+    } catch(e) { res(null); }
+  });
+  // ⚠️ put 与 get 必须分开：曾把两者揉成一个 helper，用 `result===undefined ? true : result`
+  //    让 put 报成功，结果 **get 查不到键时也返回 true**，调用方以为拿到了数据、
+  //    再也不去读 localStorage —— 兜底整条链就此失效（实测「显示 0 条」才发现）。
+  const idbPut = (k, v) => open().then(d => d && new Promise(res => {
+    try {
+      const r = d.transaction(STORE, 'readwrite').objectStore(STORE).put(v, k);
+      r.onsuccess = () => res(true);
+      r.onerror = () => res(false);
+    } catch(e) { res(false); }
+  }));
+  const idbGet = (k) => open().then(d => d && new Promise(res => {
+    try {
+      const r = d.transaction(STORE, 'readonly').objectStore(STORE).get(k);
+      r.onsuccess = () => res(r.result ?? null);   // 查不到就是 null，别冒充成功
+      r.onerror = () => res(null);
+    } catch(e) { res(null); }
+  }));
+  return {
+    async load(key) {
+      const v = await idbGet(key);
+      if (v) return v;
+      try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }
+      catch(e) { console.warn('本地缓存损坏，忽略:', e.message); return null; }
+    },
+    /** 永不抛。slim(obj) 给出瘦身版，供写不下时退而求其次 */
+    async save(key, obj, slim) {
+      if (await idbPut(key, obj)) {
+        // 进了 IndexedDB 就把 localStorage 那份腾出来 —— 同 origin 的其它 app 也在抢那 5MB
+        try { localStorage.removeItem(key); } catch(e) {}
+        return 'idb';
+      }
+      try { localStorage.setItem(key, JSON.stringify(obj)); return 'ls'; }
+      catch(e) {
+        // ⚠️ 瘦身版必须打标记：它**缺字段**，被当成完整数据推回仓库就会把图片/附件抹掉
+        try { localStorage.setItem(key, JSON.stringify({ __partial: true, ...(slim ? slim(obj) : obj) })); return 'ls-slim'; }
+        catch(e2) {
+          try { localStorage.removeItem(key); } catch(e3) {}   // 别留半份坏数据
+          console.warn('本地离线缓存写不下，已跳过（不影响使用，数据在仓库里）:', e2.message);
+          return null;
+        }
+      }
+    },
+  };
+})();
+
+/** 瘦身：剥掉能从仓库重新取的大字段（图片预览、附件内容），只留文字与引用 */
+function slimEntries(o) {
+  return { entries: (o.entries || []).map(e => ({
+    ...e,
+    images: (e.images || []).map(i => ({ path: i.path || null, name: i.name || '' })),
+    attachments: (e.attachments || []).map(a => ({ path: a.path || null, name: a.name || '', size: a.size })),
+  })) };
+}
+
+/** 缓存是瘦身版时为 true —— 此时 entries 缺图片/附件，**在成功从仓库拉到完整数据之前禁止推送** */
+let cacheIsPartial = false;
+
+async function loadLocal() {
+  const d = await LocalCache.load('ma_local');
+  entries = (d && d.entries) || [];
+  cacheIsPartial = !!(d && d.__partial);
+  if (cacheIsPartial) console.warn('本地缓存是瘦身版（缺图片/附件），拉到仓库数据前不会推送');
 }
 function saveLocal() {
-  localStorage.setItem('ma_local', JSON.stringify({ entries }));
+  // 故意不 await、不向上抛：这只是兜底缓存，失败了也不该打断任何流程
+  LocalCache.save('ma_local', { entries }, slimEntries).catch(() => {});
 }
 
 /* ══════════════════════════════════════════════
@@ -1438,6 +1516,7 @@ async function ghPull() {
     if (!rawText || rawText.trim() === '') throw new Error(T('thoughts.json 内容为空','thoughts.json is empty'));
     const parsed = JSON.parse(rawText);
     entries = parsed.entries || [];
+    cacheIsPartial = false;      // 已从仓库拿到完整数据，解除推送封印
     saveLocal();
     setSyncUI('ok');
   } catch(e) {
@@ -1448,6 +1527,13 @@ async function ghPull() {
 
 async function ghPush() {
   if (!cfg.token || !cfg.user || !cfg.repo) { saveLocal(); return; }
+  // ⚠️ 手里只有瘦身缓存时**绝不能推**：那份缺图片与附件，推上去等于把它们从仓库里抹掉
+  if (cacheIsPartial) {
+    setSyncUI('fail');
+    toast(T('本地只有精简缓存（缺图片/附件），已阻止推送以免覆盖仓库。请先刷新拉取完整数据。',
+            'Only a slimmed local cache is available — push blocked to avoid overwriting the repo. Refresh first.'), 'err');
+    return;
+  }
   setSyncUI('busy');
   try {
     // Always fetch current SHA fresh — simple, no caching issues

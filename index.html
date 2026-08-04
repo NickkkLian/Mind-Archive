@@ -2401,10 +2401,33 @@ async function syncPublicImages(pub) {
   return out;
 }
 
+/* 发布失败时，弄清到底卡在哪一步再说话。
+   为什么值得单独跑一趟：写入目标是**另一个仓库**（公开数据库），令牌对它没权限时
+   GitHub 返回的是 **404 而不是 403** —— 跟「文件还不存在」一模一样，
+   于是原来的代码把「没权限」当成「首次发布」，最后只丢一句 Not Found，
+   看的人根本不知道要去令牌里补授权。 */
+async function diagnosePublish(repo) {
+  if (!cfg.token) return T('没有填令牌', 'no token configured');
+  try {
+    const r = await fetch(`https://api.github.com/repos/${cfg.user}/${repo}`,
+                          { headers: { Authorization: 'Bearer ' + cfg.token, Accept: 'application/vnd.github+json' } });
+    if (r.status === 401) return T('令牌无效或已被撤销 → 去设置里换一把新的',
+                                   'token invalid or revoked — set a new one in Settings');
+    if (r.status === 404) return T(`令牌没有 ${repo} 仓库的权限 → 编辑这把令牌，把 ${repo} 也加进 Repository access（Contents 给 Read and write）`,
+                                   `token has no access to ${repo} — edit the token and add ${repo} to its Repository access (Contents: Read and write)`);
+    if (r.status === 403) return T('被 GitHub 拒绝（权限不足或触发限流），稍后再试',
+                                   'refused by GitHub (insufficient permission or rate limit)');
+    if (r.ok) return T('仓库能访问，卡在写入这一步（可能是令牌只给了只读）',
+                       'repo reachable — the write itself failed (token may be read-only)');
+    return T('HTTP ', 'HTTP ') + r.status;
+  } catch (e) { return T('网络不通：', 'network error: ') + e.message; }
+}
+
 // 发布公开数据：直接写入 GitHub 数据仓库（与主数据同仓库，根目录）；
 // 未配置 GitHub 或发布失败时回退为本地下载
 async function publishPublic(filename, json, count) {
   const PUBLIC_REPO = 'Database-Public'; // 公开数据专用仓库（public）——网站只从这里读取，碰不到私有库
+  let reason = '';
   if (cfg.token && cfg.user) {
     try {
       const url = `https://api.github.com/repos/${cfg.user}/${PUBLIC_REPO}/contents/${filename}`;
@@ -2425,15 +2448,25 @@ async function publishPublic(filename, json, count) {
               `Published ${count} item(s) → ${filename}. The website pulls data every 6 hours, so it can take up to 6h to appear; trigger the site's sync workflow to publish immediately.`), 'ok', 9000);
       return;
     } catch (e) {
-      toast(T('发布失败: ','Publish failed: ') + e.message + T('，已转为本地下载',', fell back to local download'), 'err');
+      // 光说 "Not Found" 没用 —— 再探一次仓库，把「到底卡在哪」说出来
+      const why = await diagnosePublish(PUBLIC_REPO);
+      reason = T(`发布失败：${why}（原始错误：${e.message}）`,
+                 `Publish failed: ${why} (raw error: ${e.message})`);
     }
+  } else {
+    // 这条以前是静悄悄走掉的：没令牌照样弹「已导出 ✓」，看着像成功，其实网站根本没更新
+    reason = T('没有配置 GitHub 令牌（去设置里填上才能真正发布）',
+               'No GitHub token configured (add one in Settings to publish for real)');
   }
   const blob = new Blob([json], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = filename; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
-  toast(T(`已导出 ${count} 条公开内容（本地下载）`,`Exported ${count} public items (local download)`), 'ok');
+  // ⚠️ 只能弹**一条** —— toast 是同一个元素，后一条会把前一条冲掉。
+  //    所以病因和「已下载」必须合成一句，否则诊断信息等于白写。
+  toast(T(`${reason}。已把 ${count} 条下载到本地——这不是发布，网站不会更新。`,
+          `${reason}. Downloaded ${count} item(s) locally — this is NOT publishing; the site will not update.`), 'err', 13000);
 }
 
 /* ══════════════════════════════════════════════

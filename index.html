@@ -959,7 +959,7 @@ button,a,summary,label,[role="button"],[onclick]{
   <div class="modal modal-md">
     <div class="modal-head">
       <div class="modal-title" id="addTitle">记录新想法</div>
-      <button class="close-btn" onclick="closeModal('addOverlay')">✕</button>
+      <button aria-label="关闭" class="close-btn" onclick="closeModal('addOverlay')">✕</button>
     </div>
     <div class="modal-body">
       <div class="fg">
@@ -1076,7 +1076,7 @@ button,a,summary,label,[role="button"],[onclick]{
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="editCurrent()" data-i18n="edit">编辑</button>
       <button class="btn btn-danger btn-sm" onclick="deleteCurrent()" data-i18n="del">删除</button>
-      <button class="close-btn" onclick="closeModal('detailOverlay')">✕</button>
+      <button aria-label="关闭" class="close-btn" onclick="closeModal('detailOverlay')">✕</button>
     </div>
     <div class="modal-body">
       <div class="detail-title" id="detailTitle" style="display:none"></div>
@@ -1113,7 +1113,7 @@ button,a,summary,label,[role="button"],[onclick]{
   <div class="modal modal-lg">
     <div class="modal-head">
       <div class="modal-title" data-i18n="summaryT">✦ AI 总结与分析</div>
-      <button class="close-btn" onclick="closeModal('summaryOverlay')">✕</button>
+      <button aria-label="关闭" class="close-btn" onclick="closeModal('summaryOverlay')">✕</button>
     </div>
     <div class="modal-body">
       <div class="tab-row">
@@ -1134,7 +1134,7 @@ button,a,summary,label,[role="button"],[onclick]{
   <div class="modal modal-sm">
     <div class="modal-head">
       <div class="modal-title" data-i18n="settingsTitle">设置</div>
-      <button class="close-btn" onclick="closeModal('settingsOverlay')">✕</button>
+      <button aria-label="关闭" class="close-btn" onclick="closeModal('settingsOverlay')">✕</button>
     </div>
     <div class="modal-body">
       <div class="settings-note" data-i18n="settingsNote">
@@ -2122,7 +2122,7 @@ function renderFileList() {
       <span class="file-item-name" title="${esc(f.name)}">${esc(f.name)}</span>
       <span class="file-item-size">${fmtSize(f.size)}</span>
       <span class="file-item-badge ${f.path ? 'uploaded' : 'pending'}">${f.path ? '✓' : T('待传','pending')}</span>
-      <button class="file-item-del" onclick="removeFile(${i})">✕</button>
+      <button aria-label="${T('移除这个文件','Remove file')}" class="file-item-del" onclick="removeFile(${i})">✕</button>
     </div>`).join('');
 }
 
